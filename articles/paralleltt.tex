@@ -31,6 +31,7 @@
 \usepackage{tikz}
 \usetikzlibrary{matrix,snakes, patterns, positioning, shapes, calc, intersections, arrows, fit}
 
+\graphicspath{{./diagrams/}}
 
 %%\theoremstyle{plain}
 %%\newtheorem{lemma}{Lemma}
@@ -87,7 +88,232 @@ The abstract should briefly summarize the contents of the paper in
 
 \section{Introduction}
 \label{sec:introduction}
+% 1-page
+\begin{itemize}
+	\item Popularity of tensors
+	\item Need towards developing parallel and communication efficient algorithms
+	\item HPC supercomputers
+	\item tensor decomposition uses in Machine learning, Chemistry applications
+	\item intuition behind Tensor train decomposition and its properties
+	\item divison of indices for TT and PTT decomposition
+	\item outline of this paper
+\end{itemize}
+\section{Related Work}
+\label{sec:relatedWork}
+%0.5 page
+\begin{itemize}
+	\item Different types of tensor decompositions
+	\item Properties  and limitation of each type of tensor decomposition (Look at Osoledets's advisor work)
+	\item Kolda's work
+	\item Ballard's work
+	\item Solomonik's work
+\end{itemize}
+
+
+\section{Tensor Train Decomposition}
+\label{sec:tt}
+% 0.5 page
+\begin{itemize}
+	\item Tensor train decomposition
+	\item Complexity and its analysis
+\end{itemize}
+
+\section{Paralle Tensor Train Decomposition}
+\label{sec:ptt}
+% 2.5 pages
+\begin{itemize}
+	\item Different notations
+	\item Parallel Tensor train algorithm and its proof
+	\item Working principle with a matrix diagram and its reshape property
+	\item Its generalization idea that we can break it from anywhere
+\end{itemize}
+\section{Our Heuristics}
+\label{sec:heuristics}
+% 1 page
+\begin{itemize}
+	\item Our heuristics
+	\item different performance metrics
+\end{itemize}
+\section{Experimental Results}
+\label{sec:expResults}
+\begin{itemize}
+	\item Low rank functions and their descriptions
+	\item Compression ratio tables
+	\item plot ratio of actual/min storage (may be with ratio)
+	\item Tensor arising in Molecular chemistry
+\end{itemize}
+\section{Discussion}
+\label{sec:discussion}
+\begin{itemize}
+	\item Implementation of first svd computation
+	\item Complexity and storage of the extra buffer in H3 heuristic
+	\item Other decomposition instead of svd
+	\item Analysis of operations in both algorithms
+\end{itemize}
+\section{Conclusion}
+\label{sec:conclusion}
+\begin{itemize}
+	\item Proof, heuristics and experiments
+	\item Implementation of this approach
+	\item RRQR instead of svd
+	\item Combinatorial choices to find the best order to perform TT or PTT decomposition
+\end{itemize}
+
+
+
+
 %
+\section{Tensor Train Decomposition}
+\label{sec:tt_sequential}
+
+Let $A(i_1,i_2,\cdots, i_d)$ denote the elements of a $d$-dimensional tensor \tensor{A}. The dimensions of \tensor{A} are $n_1 \times n_2 \times \cdots \times n_d$. The $k$-th unfolding matrix of tensor \tensor{A} is represented by $A_k$.
+
+\begin{align*}
+A_k &= A_k(i_1, i_2,\cdots, i_k; i_{k+1},\cdots ,i_d)
+\end{align*}
+
+\noindent The first $k$ indices represent the rows of $A_k$ and the last $d-k$ the columns of $A_k$. The size of this matrix is $(\prod_{l=1}^{k}n_l)\times(\prod_{l=k+1}^{d}n_l)$. The rank of this matrix is denoted by $r_k$.
+
+\noindent \textit{Oseledets} proposed an algorithm to compute Tensor Train (TT) decomposition of a tensor in ~\cite{tt}. We also describe this in Algorithm~\ref{alg:tt_original}. 
+
+
+\begin{algorithm}[htb]
+	\caption{\label{alg:tt_original}TT decomposition (\textcolor{green}{sequential})}
+	\begin{algorithmic}[1]
+		\REQUIRE $d$-dimensional tensor \tensor{A} and ranks ($r_1, r_2,\cdots, r_{d-1}$) 
+		\ENSURE Cores $G_k(\alpha_{k-1}, n_k, \alpha_k) _{1\le k\le d}$ of the TT-decomposition with $\alpha_k \le r_k$ and $\alpha_0 = \alpha_d=1$
+		\STATE Temporary tensor $\tensor{C}=\tensor{A}$, $\alpha_0=1$
+		\FOR{$k=1$ \TO $d-1$} 
+		\STATE $C$ =  reshape($C, \alpha_{k-1} n_k$) 
+		\STATE SVD: $C=U \Sigma V$
+		\STATE $\alpha_k=$ rank($\Sigma$)
+		\STATE // first $\alpha_k$ columns of $U$
+		%%		\COMMENT {Hello}
+		\STATE $U_k = U[;\alpha_k]$
+		\STATE Temporary $T =\Sigma V$
+		\STATE //first $\alpha_k$ rows of $\Sigma V$
+		\STATE $C= T[\alpha_k;]$
+		\STATE $G_k$ = reshape($U_k, \alpha_{k-1}, n_k, \alpha_k$)
+		\ENDFOR
+		\STATE $G_d = C$, $\alpha_d=1$
+		\RETURN tensor cores $G_k(\alpha_{k-1}, n_k, \alpha_k) _{1\le k\le d}$
+	\end{algorithmic}
+\end{algorithm}
+
+Algorithm~\ref{alg:tt_original} returns a TT decomposition of tensor \tensor{A}. It also ensures that $\alpha_k \le r_k$ $_{1\le k < d}$. We refer the reader to the original paper~\cite{tt} for more details about this algorithm. 
+
+The original TT decomposition algorithm is sequential. In this article, we modify the original algorithm so that it can run efficiently in parallel. The description of the modified algorithm is presented in the next section.
+
+\section{Parallel TT Decomposition}
+\label{sec:tt_parallel}
+
+The original indices of a tensor are called external indices, while the indices arise due to SVD are called internal indices. $nE$ and $nI$ denote the number of external and internal indices respectively of a tensor. A tensor with elements $A(\alpha, i_1, i_2, i_3, \beta)$ has $3$ external and $2$ internal indices. We also extend the definition of unfolding matrix to take internal indices into account.
+\todo[inline]{SK: define a tensor for this $A_k$ representation}
+\begin{align*}
+A_k &= A_k(\alpha, i_1, i_2, \cdots, i_k; i_{k+1}\cdots, \beta)
+\end{align*}
+Here we consider all indices from the beginning to $i_k$ as the rows of $A_k$ and the remaining indices as the columns of $A_k$.
+\todo[inline]{SK: make this function smooth for recursive calls}
+\begin{algorithm}[htb]
+	\caption{\label{alg:tt_parallel}TT-parallel (\textcolor{orange}{parallel} Tensor Train Decomposition)}
+	\begin{algorithmic}[1]
+		\REQUIRE $d$-dimensional tensor \tensor{A} and ranks ($r_1, r_2,\cdots r_{d-1}$) 
+		\ENSURE Cores $G_k(\alpha_{k-1}, n_k, \alpha_k) _{1\le k\le d}$ of the TT-decomposition with $\alpha_k \le r_k$ and $\alpha_0 = \alpha_d=1$
+		\IF{$nE(\tensor{A})> $$1$} 
+		\STATE $k=$mid-external-index(\tensor{A}) 
+		\STATE $A_k =$ reshape(\tensor{A},k)
+		\STATE SVD: $A_k = U\Sigma V$
+		\STATE $\alpha_k=$ rank($\Sigma$)
+		\STATE // first $\alpha_k$ columns of $U$
+		\STATE $\tensor{A}$$_u$ = Tensor($U[;\alpha_k]$)
+		\STATE list1 = TT-parallel($\tensor{A}$$_u$)
+		\STATE Temporary $T =\Sigma V$
+		\STATE //first $\alpha_k$ rows of $\Sigma V$
+		\STATE $\tensor{A}$$_v$ = Tensor($T[\alpha_k;]$)
+		\STATE list2 = TT-parallel($\tensor{A}$$_v$)
+		\RETURN \{list1, list2\}
+		\ELSIF{$nE(\tensor{A})==$$1$ and $nI(\tensor{A})==$$1$} 
+		\STATE $k=$ external-index(\tensor{A})
+		\STATE if $k$ is the first index of $\tensor{A}$ then $\alpha_0=1$ else $\alpha_d = 1$
+		\STATE $G_k = \tensor{A}$
+		\RETURN $G_k$
+		\ELSE 
+		\STATE $G_k = \tensor{A}$
+		\RETURN $G_k$
+		\ENDIF
+	\end{algorithmic}
+\end{algorithm} 
+
+Algorithm~\ref{alg:tt_parallel} is recursive and returns the tensor cores of a TT decomposition for tensor \tensor{A}.  This algorithm exposes parallelism in binary tree shape. It achieves maximum $\frac{d}{2}$-level of parallelism at the last level of the tree. Figure~\ref{fig:4dindices} shows that how indices of a $4$-dimensional tensor are divided by this algorithm.
+
+\todo[inline]{SK: Draw final diagrams in tikz/xfig}
+\begin{figure}[htb]
+	\begin{center}
+		\includegraphics[scale=0.06]{./indices-partition.jpg}
+	\end{center}
+	\caption{\label{fig:4dindices} Partition of indices for a $4$-dimensional tensor by Algorithm~\ref{alg:tt_parallel}.} 
+\end{figure}
+
+\noindent The proof on the bound of TT ranks obtained by Algorithm~\ref{alg:tt_parallel} is described in the following theorem.
+
+\begin{theorem}
+	If for each unfolding $A_k$ of a $d$-dimensional tensor, $rank(A_k)=r_k$, then Algorithm~\ref{alg:tt_parallel} produces a decomposition with TT ranks not higher than $r_k$.
+\end{theorem}
+\begin{proof}
+	Let us consider unfolding matrix $A_k$ of a $d$-dimensional tensor \tensor{A}. The rank of this matrix is $r_k$; hence it can be written as:
+	\begin{align*}
+	A_k &= UV^\intercal\\
+	A_k(i_1,i_2,\cdots,i_k;i_{k+1},\cdots, i_d) &= \sum_{\alpha=1}^{r_k} U(i_1,i_2,\cdots,i_k, \alpha)V(\alpha,i_{k+1},\cdots, i_d)
+	\end{align*}
+	
+	
+	\begin{align*}
+	U &= A_k V(V^\intercal V)^{-1} = A_k X\\
+	V &= A_k^\intercal U(U^\intercal U)^{-1} = A_k^T W
+	\end{align*}
+	
+	\noindent Or in the index form,
+	\begin{align*}
+	U(i_1,i_2,\cdots, i_k, \alpha) &= \sum_{i_{k+1}=1}^{n_{k+1}}\cdots\sum_{i_d=1}^{n_d} A(i_1, i_2, \cdots, i_d) X(\alpha, i_{k+1},\cdots, i_d)\\
+	V(\alpha, i_{k+1},\cdots, i_d) &= \sum_{i_1=1}^{n_1} \cdots \sum_{i_k=k}^{n_k} A(i_1, i_2, \cdots, i_d) W(i_1,i_2,\cdots, i_k, \alpha)
+	\end{align*}
+	
+	\noindent $U$ and $V$ can be treated as $k+1$ and $d-k+1$ dimensional tensors respectively. Now we consider unfolding matrices $U_1, U_2, \cdots, U_{k-1}$ and $V_{k+1},\cdots, V_{d-1}$ of $U$ and $V$. We will show that $U_{k'} \le r_{k'}$ $_{1\le k' \le k-1}$ and $V_{k'}\le r_{k'}$ $_{k+1\le k' \le d-1}$.
+	
+	\noindent The rank of $A_{k'}$ is $r_{k'}$. Therefore, it can be represented as,
+	\begin{align*}
+	A(i_1, i_2, \cdots, i_d) &= \sum_{\beta=1}^{r_{k'}} F(i_1,i_2,\cdots ,i_{k'}, \beta) G(\beta, i_{k'+1},\cdots, i_d)
+	\end{align*}
+	Now, 
+	\begin{align*}
+	U_{k'} &= U(i_1,i_2, \cdots, i_{k'}; i_{k'+1},\cdots,i_k, \alpha)\\
+	&= \sum_{i_{k+1}=1}^{n_{k+1}}\cdots\sum_{i_d=1}^{n_d} A(i_1, i_2, \cdots, i_d)X(\alpha, i_{k+1},\cdots, i_d)\\
+	&= \sum_{\beta=1}^{r_{k'}}  \sum_{i_{k+1}=1}^{n_{k+1}}\cdots\sum_{i_d=1}^{n_d} F(i_1,i_2,\cdots ,i_{k'}, \beta) G(\beta, i_{k'+1},\cdots, i_d) X(\alpha, i_{k+1},\cdots, i_d)\\
+	&= \sum_{\beta=1}^{r_{k'}} F(i_1,i_2,\cdots ,i_{k'}, \beta) H(\beta,i_{k'+1},\cdots, i_k, \alpha)
+	\end{align*}
+	\noindent where,
+	\begin{align*}
+	H(\beta,i_{k'+1},\cdots, i_k, \alpha) =& \sum_{i_{k+1}=1}^{n_{k+1}}\cdots\sum_{i_d=1}^{n_d} G(\beta, i_{k'+1},\cdots, i_d) X(\alpha, i_{k+1},\cdots, i_d)
+	\end{align*}
+	\noindent Row and column indices of $U_{k'}$ are now separated. Hence rank $U_{k'} \le r_{k'}$.
+	
+	\medskip
+	\noindent Similarly for $V_{k'}$,
+	\begin{align*}
+	V_{k'}&= V(\alpha, i_{k+1}, \cdots, i_{k'}; i_{k'+1},\cdots, i_d)\\
+	&= \sum_{i_1=1}^{n_1} \cdots \sum_{i_k=k}^{n_k} A(i_1, i_2, \cdots, i_d) W(i_1,i_2,\cdots, i_k, \alpha)\\
+	&= \sum_{\beta=1}^{r_{k'}} \sum_{i_1=1}^{n_1} \cdots \sum_{i_k=k}^{n_k} F(i_1,i_2,\cdots ,i_{k'}, \beta) G(\beta, i_{k'+1},\cdots, i_d) W(i_1,i_2,\cdots, i_k, \alpha)\\ 
+	&= \sum_{\beta=1}^{r_{k'}} M(\alpha, i_{k+1}, \cdots, i_{k'}, \beta) G(\beta, i_{k'+1},\cdots, i_d)
+	\end{align*}	
+	\noindent where
+	\begin{align*}
+	M(\alpha, i_{k+1}, \cdots, i_{k'}, \beta) &= \sum_{i_1=1}^{n_1} \cdots \sum_{i_k=k}^{n_k} F(i_1,i_2,\cdots ,i_{k'}, \beta) W(i_1,i_2,\cdots, i_k, \alpha)
+	\end{align*}
+	\noindent Here also row and column indices of $V_{k'}$ are separated. Hence rank $V_{k'} \le r_{k'}$.
+	
+	%%	This process continues recursively until each subtensor has exactly one external index. 
+	When Algorithm~\ref{alg:tt_parallel} terminates, we have a list of tensors with exactly one external index. These tensors are cores of a TT-representation. As the above proof holds for each recursive partition, hence TT ranks of the decomposition produced by Algorithm~\ref{alg:tt_parallel} are bounded by $r_k$. This completes the proof.
+\end{proof}
 
 
 %%\begin{table}
