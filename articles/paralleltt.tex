@@ -159,29 +159,8 @@ A(i_1, i_2,\cdots ,i_d) &= \sum_{\alpha_0 = 1}^{r_0} \sum_{\alpha_1 = 1}^{r_1} \
 	\item Working principle with a matrix diagram and its reshape property
 	\item Its generalization idea that we can break it from anywhere
 \end{itemize}
-\section{Our Heuristics}
-\label{sec:heuristics}
-% 1 page
-\begin{itemize}
-	\item Our heuristics
-	\item different performance metrics
-\end{itemize}
-\section{Experimental Results}
-\label{sec:expResults}
-\begin{itemize}
-	\item Low rank functions and their descriptions
-	\item Compression ratio tables
-	\item plot ratio of actual/min storage (may be with ratio)
-	\item Tensor arising in Molecular chemistry
-\end{itemize}
-\section{Discussion}
-\label{sec:discussion}
-\begin{itemize}
-	\item Implementation of first svd computation
-	\item Complexity and storage of the extra buffer in H3 heuristic
-	\item Other decomposition instead of svd
-	\item Analysis of operations in both algorithms
-\end{itemize}
+
+
 \section{Conclusion}
 \label{sec:conclusion}
 \begin{itemize}
@@ -386,18 +365,62 @@ C = A_k^\intercal (B^\intercal)^{-1}S^{-1} &= A_k^\intercal W
 \end{proof}
 
 
+\section{Tensor Train Compression and Our Heuristics}
+\label{sec:heuristics}
+% 1 page
+%%\begin{itemize}
+%%	\item Our heuristics
+%%	\item different performance metrics
+%%\end{itemize}
+
+%%Tensor decompositions are often approximated with a controllable global error to cope with noise and numerical instability. In this section, we propose different heuristics such that the approximated tensor is close to the original tensor by some prescribed accuracy.
+
+Tensor decompositions are often approximated to cope with noise and numerical instability. In practical computations, rank-$r_k$ approximation of a tensor or an approximated tensor with certain accuracy  is desired. Algorithm~\ref{alg:tt_parallel} can be used to compute rank-$r_k$ approximation of a tensor instead of exact low-rank decomposition. However we are yet to claim any optimality on its approximation and it is a part of our future work.
+
+We modify Algorithm~\ref{alg:tt_parallel} to compute an approximated tensor in TT-format which is close by the prescribed accuracy, and present it in Algorithm~\ref{alg:tt_parallel_approx}.
+ 
+\begin{algorithm}[htb]
+	\caption{\label{alg:tt_parallel_approx}TT-parallel-approx (parallel Tensor Train approximation)}
+	\begin{algorithmic}[1]
+		\REQUIRE $d$-dimensional tensor \tensor{A} and expected accuracy $\epsilon$ 
+		\ENSURE Cores $G_k(\alpha_{k-1}, n_k, \alpha_k) _{1\le k\le d}$ of the approximated tensor $B$ in TT-format such that $||A-B||_F$ is close to or less than $\epsilon$
+		\IF{$nE(\tensor{A})> $$1$} 
+		\STATE Find the middle external index $k$
+		\STATE Compute unfolding matrix $A_k$ 
+		\STATE Compute SVD: $A_k = U \Sigma V^\intercal$
+		\STATE Compute truncation\_accuracy $\delta$
+		\STATE Compute $\alpha_k$ such that $A_k = U(;1:\alpha_k) \Sigma(1:\alpha_k; 1:\alpha_k) V^\intercal(1:\alpha_k;) + E_k$ and $||E_K||_F \le \delta$
+		\STATE Select diagonal matrices $X_k$, $S_k$ and $Y_k$ such that $X_kS_kY_k = \Sigma(1:\alpha_k; 1:\alpha_k)$
+		\STATE $\tensor{A}$$_{left}$ = Tensor($U(;1:\alpha_k)X_k$)
+		\STATE list1 = TT-parallel-approx($\tensor{A}$$_{left}$, $\epsilon_1$)
+		\STATE $\tensor{A}$$_{right}$ = Tensor($Y_kV^\intercal(1:\alpha_k;)$)
+		\STATE list2 = TT-parallel-approx($\tensor{A}$$_{right}$, $\epsilon_2$)
+		\RETURN \{list1, list2\}
+		\ELSE 
+		\STATE Find the external index $k$
+		\IF {$k$ is the last index of \tensor{A}} 
+		\STATE $\alpha_d = 1$
+		\STATE $G_k = \tensor{A}$
+		\RETURN $G_k$
+		\ENDIF
+		\IF {$k$ is the first index of \tensor{A}}
+		\STATE $\alpha_0 = 1$
+		\ENDIF
+		\STATE Compute unfolding matrix $A_k$
+		\STATE Update $A_k$, $A_k = A_kS_k$
+		\STATE  $G_k$ = Tensor($A_k$)
+		\STATE return $G_k$
+		\ENDIF
+	\end{algorithmic}
+\end{algorithm}
+
+Values of $\delta$, $\epsilon_1$ and $\epsilon_2$ in Algorithm~\ref{alg:tt_parallel_approx} depend on the selection of diagonal matrices $X_k$, $Y_k$ and $S_K$. We show in next subsection that how product of approximated matrices impact the accuracy of the result when applied with svd truncation. Based on the expression of next subsection, we compute $\epsilon_1$ and $\epsilon_2$  for different choices of $X_k$, $Y_k$ and $S_K$ in Section~\ref{sec:heuristics:all}.  
 
 
+%%we propose different heuristics such that the approximated tensor is close to the original tensor by some prescribed accuracy. 
+\subsection{Frobenius Error with Product of Approximated Matrices}
+\label{sec:heuristics:approxproduct}
 
-
-
-
-
-
-
-
-
-\section{Problem Description}
 The following equation represents the singular value decomposition of a real matrix $A$.
 \begin{equation*}
 A=U\Sigma V^T
@@ -414,11 +437,9 @@ A&=(U_1 U_2)\begin{pmatrix}
 &= BSC + E_A
 \end{align*}
 
-\noindent Here $B = U_1 X$, $C=YV_1^T$ and $XSY = \Sigma_1$.  Matrices $B$ and $C$ are approximated to $\hat{B}$ and $\hat{C}$, i.e., $B = \hat{B} + E_B$ and $C = \hat{C} + E_C$.
+\noindent Here $B = U_1 X$, $C=YV_1^T$ and $XSY = \Sigma_1$.  Matrices $B$ and $C$ are approximated to $\hat{B}$ and $\hat{C}$, i.e., $B = \hat{B} + E_B$ and $C = \hat{C} + E_C$. $X$, $Y$ and $S$ are diagonal matrices. $E_A$, $E_B$ and $E_C$ represent error matrices corresponding to low-rank approximation of $A$, $B$ and $C$.
 
-\medskip
-{\color{blue}
-	\noindent Our goal is to choose $X$, $Y$ and $S$ such that $||A - \hat{B} S \hat{C}||_F$ can be bounded in terms of $||E_A||_F$, $||E_B||_F$ and $||E_C||_F$}.
+\noindent Our goal is to find an expression for $||A - \hat{B} S \hat{C}||_F$ in terms of $||E_A||_F$, $||E_B||_F$ and $||E_C||_F$.
 
 \begin{align*}
 A - \hat{B} S \hat{C} &= A - (B-E_B)S(C-E_C)\\
@@ -447,22 +468,21 @@ After putting these values in $||A - \hat{B}S\hat{C}||_F^2$ expression, we get
 & -2 <BSE_C, E_BSE_C>_F - 2<E_BSC, E_BSE_C>_F
 \end{align*}
 
-\noindent In general, expected error of any compression is very low, therefore we assume that any term involving more than one error matrix would be close to zero. With this assumption, the above equation can be written as
+\noindent In general, targeted error of any compression is very low, therefore we assume that any term involving more than one error matrix would be close to zero. With this assumption, the above equation can be written as
 
-\begin{equation}\label{eq:approx}
+\begin{equation*}
+%%\label{eq:approx}
 ||A - \hat{B} S \hat{C}||_F^2 \approx ||E_A||_F^2 + ||BSE_C||_F^2 + ||E_BSC||_F^2
-\end{equation}
+\end{equation*}
 
-\todo[inline]{SK: Make smooth transition from matrices to tensors. Present matrix results as a Lemma and use it for tensors.}
-\todo[inline]{SK: Definitions of B and C are not clear in unfolding of tensors.}
+\subsection{Different Heuristics}
+\label{sec:heuristics:all}
 
-\noindent Similar to the approach of ~\cite{.}, we take $||E_A||_F \le \frac{\epsilon}{\sqrt{d-1}}$. Let $B$ and $C$ correspond to unfolding of $d_1$ and $d_2$ dimensional tensors and $d_1 + d_2 = d$. For simplicity, we  assume $\frac{||E_B||_F^2}{d_1-1} = \frac{||E_C||_F^2}{d_2-1} = \delta^2$.
+It is immediate that the expression of the previous subsection can be applied for each unfolding of Algorithm~\ref{alg:tt_parallel_approx}. Similar to the approach of~\cite{tt}, we take $||E_{A_k}||_F \le \frac{\epsilon}{\sqrt{d-1}}$. Let $B$ and $C$ correspond to unfolding of $d_1$ and $d_2$ dimensional tensors and $d_1 + d_2 = d$. For simplicity, we  assume $\frac{||E_B||_F^2}{d_1-1} = \frac{||E_C||_F^2}{d_2-1} = \delta^2$. This implies $\frac{\epsilon_1^2}{d_1-1} = \frac{\epsilon_2^2}{d_2-1} = \delta^2$.
 
-\noindent Now we propose three heuristics such that Eq ~\ref{eq:approx} is bounded by $\epsilon$.
-\todo[inline]{SK: find catchy names for heuristics.}
-%%\todo[inline]{SK: mention how cauchy schwarz inequality is applied.}
-\begin{itemize}
-	\item Heuristic1: Here we select $X = I$, $Y = \Sigma_1$ and $S = I$.	
+\noindent Now we propose three heuristics such that overall error of approximation of Alogrithm~\ref{alg:tt_parallel_approx} is close or less to $\epsilon$.
+\begin{enumerate}
+	\item \textit{H1}: Here we select $X = I$, $Y = \Sigma_1$ and $S = I$.	
 	\begin{align*}
 	||A - \hat{B} S \hat{C}||_F^2 &\approx ||E_A||_F^2 + ||U_1IIE_C||_F^2 + ||E_BI\Sigma_1V_1^T||_F^2 \\
 	&\le \frac{\epsilon^2}{d-1}  + ||E_C||_F^2 + ||E_B\Sigma_1||_F^2 \\
@@ -471,13 +491,11 @@ After putting these values in $||A - \hat{B}S\hat{C}||_F^2$ expression, we get
 	&= \frac{\epsilon^2}{d-1} + \delta^2 (d_2-1)+ \delta^2  (d_1-1) trace(\Sigma_1^2)\le \epsilon^2.
 	\end{align*}
 	\noindent After simplifying this expression we obtain
-	%%	
-	%%	\noindent $||A - \hat{B}\hat{C}||_F^2 \approx \frac{\epsilon^2}{d-1} + ||U_1IE_C||_F^2 + ||E_B\Sigma_1V_1||_F^2  \le \frac{\epsilon^2}{d-1} + \delta^2 + \delta^2 trace(\Sigma_1^2)\le \epsilon^2$. After simplifying this expression we obtain
 	\begin{align*}
 	\delta &\le \epsilon \sqrt{\frac{d-2}{(d-1) (d_2 -1 + (d_1-1) trace(\Sigma_1^2))}}.
 	\end{align*}
 	
-	\item Heuristic2: We choose $X=Y=\Sigma_1^{\frac{1}{2}}$ and $S=I$.
+	\item \textit{H2}: We choose $X=Y=\Sigma_1^{\frac{1}{2}}$ and $S=I$.
 	
 	\begin{align*}
 	||A - \hat{B} S \hat{C}||_F^2 &\approx ||E_A||_F^2 + ||U_1 \Sigma_1^{\frac{1}{2}} IE_C||_F^2 + ||E_B I \Sigma_1^{\frac{1}{2}} V_1^T||_F^2 \\
@@ -485,16 +503,13 @@ After putting these values in $||A - \hat{B}S\hat{C}||_F^2$ expression, we get
 	\text{From Cauchy} & \text{-Schwarz inequality,}\\
 	&\le \frac{\epsilon^2}{d-1}  + ||E_C||_F^2 ||\Sigma_1^{\frac{1}{2}}||_F^2 + ||E_B||_F^2  ||\Sigma_1^{\frac{1}{2}}||_F^2  \\
 	&= \frac{\epsilon^2}{d-1} + \delta^2 (d_2-1) trace(\Sigma_1) + \delta^2 (d_1 -1) trace(\Sigma_1)\le \epsilon^2.
-	\end{align*}
-	
-	%%	\noindent $||A - \hat{B}\hat{C}||_F^2 \approx \frac{\epsilon^2}{d-1} + ||U_1 \Sigma_1^{\frac{1}{2}} E_C||_F^2 + ||E_B \Sigma_1^{\frac{1}{2}} V_1||_F^2  \le \frac{\epsilon^2}{d-1} + \delta^2 trace(\Sigma_1) + \delta^2 trace(\Sigma_1)\le \epsilon^2$. 
-	
+	\end{align*} 
 	\noindent After simplifying this expression we obtain
 	\begin{align*}
 	\delta &\le \frac{\epsilon}{\sqrt{(d-1)trace(\Sigma_1)}}.
 	\end{align*}
 	
-	\item Heuristic3: We choose $X=Y=\Sigma_1$ and $S=\Sigma_1^{-1}$.
+	\item \textit{H3}: We choose $X=Y=\Sigma_1$ and $S=\Sigma_1^{-1}$.
 	\begin{align*}
 	||A - \hat{B} S \hat{C}||_F^2 &\approx ||E_A||_F^2 + ||U_1\Sigma_1 \Sigma_1^{-1} E_C||_F^2 + ||E_B \Sigma_1^{-1} \Sigma_1 V_1^T||_F^2\\
 	&\le  \frac{\epsilon^2}{d-1} + ||E_C||_F^2 +  ||E_B||_F^2 \\
@@ -504,16 +519,142 @@ After putting these values in $||A - \hat{B}S\hat{C}||_F^2$ expression, we get
 	\begin{align*}
 	\delta &\le \frac{\epsilon}{\sqrt{d-1}}.
 	\end{align*}	
-\end{itemize}
+\end{enumerate}
+
+The following table summarizes all parameters of different heuristics for Algorithm~\ref{alg:tt_parallel_approx}. Let left and right subtensors are denoted by \tensor{B} and \tensor{C}, and have $d_1$ and $d_2$ external dimensions.
+
+\begin{table}[htb]
+\begin{tabular}{|c|c|c|c|c|}
+	\hline
+	Heuristic & Description & $\epsilon_{A_k}$ & $\epsilon_1$ & $\epsilon_2$\\ \hline
+	H1 &  $X = I$, $Y = \Sigma_1$, $S = I$ & $\frac{\epsilon}{\sqrt{d-1}}$ & $\epsilon \sqrt{\frac{(d-2)(d_1-1)}{(d-1) (d_2 -1 + (d_1-1) trace(\Sigma_1^2))}}$ & $\epsilon \sqrt{\frac{(d-2)(d_2-1)}{(d-1) (d_2 -1 + (d_1-1) trace(\Sigma_1^2))}}$\\ \hline
+	H2 & $X=Y=\Sigma_1^{\frac{1}{2}}$, $S=I$ & $\frac{\epsilon}{\sqrt{d-1}}$ &
+	$\epsilon\sqrt{\frac{d_1-1}{(d-1)trace(\Sigma_1)}}$ & $\epsilon\sqrt{\frac{d_2-1}{(d-1)trace(\Sigma_1)}}$\\ \hline
+	H3 & $X=Y=\Sigma_1$, $S=\Sigma_1^{-1}$ & $\frac{\epsilon}{\sqrt{d-1}}$ &
+	$\epsilon\sqrt{\frac{d_1-1}{d-1}}$ & $\epsilon\sqrt{\frac{d_2-1}{d-1}}$\\ \hline 
+\end{tabular}
+\caption{Details of all considered heuristics\label{tab:heuristics}.}
+\end{table}
+It is not hard to observe that svd truncation of $\frac{\epsilon}{\sqrt{d-1}}$ is used for each unfolding in \textit{H3}.
+
+%%
+%%The following equation represents the singular value decomposition of a real matrix $A$.
+%%\begin{equation*}
+%%A=U\Sigma V^T
+%%\end{equation*}
+%%
+%%\noindent We can also write the above equation in the following way.
+%%\begin{align*}
+%%A&=(U_1 U_2)\begin{pmatrix}
+%%\Sigma_1 & 0\\
+%%0 & \Sigma_2
+%%\end{pmatrix}(V_1 V_2)^T\\
+%%&= U_1\Sigma_1 V_1^T + U_2 \Sigma_2 V_2^T\\
+%%&= U_1\Sigma_1 V_1^T + E_A \\
+%%&= BSC + E_A
+%%\end{align*}
+%%
+%%\noindent Here $B = U_1 X$, $C=YV_1^T$ and $XSY = \Sigma_1$.  Matrices $B$ and $C$ are approximated to $\hat{B}$ and $\hat{C}$, i.e., $B = \hat{B} + E_B$ and $C = \hat{C} + E_C$.
+
+%%\medskip
+%%{\color{blue}
+%%	\noindent Our goal is to choose $X$, $Y$ and $S$ such that $||A - \hat{B} S \hat{C}||_F$ can be bounded in terms of $||E_A||_F$, $||E_B||_F$ and $||E_C||_F$
+%%}.
+
+%%\begin{align*}
+%%A - \hat{B} S \hat{C} &= A - (B-E_B)S(C-E_C)\\
+%%&= A - BSC + BSE_C +  E_BSC - E_BSE_C\\
+%%&= E_A + BSE_C +  E_BSC - E_BSE_C
+%%\end{align*}
+%%Now we take square of Frobenius norm on both sides,
+%%\begin{align*}
+%%||A - \hat{B} S \hat{C}||_F^2 =& ||E_A + BSE_C +  E_BSC - E_BSE_C||_F^2 \\
+%%=& ||E_A||_F^2 + ||BSE_C||_F^2 + ||E_BSC||_F^2 + ||E_BSE_C||_F^2 \\
+%%& + 2\boldsymbol{<}E_A, BSE_C\boldsymbol{>}_F + 2<E_A, E_BSC>_F -2 <E_A, E_BSE_C>_F\\
+%%& + 2 <BSE_C, E_BSC>_F -2 <BSE_C, E_BSE_C>_F - 2<E_BSC, E_BSE_C>_F
+%%\end{align*}
+%%
+%%\noindent Here $<P, Q>_F$ denotes frobenius inner product of matrices P and Q, and it is defined as: $<P, Q>_F = trace(P^TQ) = trace(PQ^T)$.
+%%
+%%\noindent As $U$ and $V$ are othogonal matrices in singular value decomposition of $A$. Hence we obtain the following expressions:
+%%\begin{align*}
+%%U_1^TU_2 = 0 & \implies B^TE_A = 0 \implies <E_A, BSE_C>_F = 0\\
+%%V_1^TV_2 = 0 & \implies CE_A^T = 0 \implies <E_A, E_BSC>_F = 0  
+%%\end{align*}
+%%After putting these values in $||A - \hat{B}S\hat{C}||_F^2$ expression, we get
+%%\begin{align*}
+%%||A - \hat{B} S \hat{C}||_F^2 =& ||E_A||_F^2 + ||BSE_C||_F^2 + ||E_BSC||_F^2 + ||E_BSE_C||_F^2 \\
+%%& -2 <E_A, E_BSE_C>_F  + 2 <BSE_C, E_BSC>_F\\
+%%& -2 <BSE_C, E_BSE_C>_F - 2<E_BSC, E_BSE_C>_F
+%%\end{align*}
+%%
+%%\noindent In general, expected error of any compression is very low, therefore we assume that any term involving more than one error matrix would be close to zero. With this assumption, the above equation can be written as
+%%
+%%\begin{equation}\label{eq:approx}
+%%||A - \hat{B} S \hat{C}||_F^2 \approx ||E_A||_F^2 + ||BSE_C||_F^2 + ||E_BSC||_F^2
+%%\end{equation}
+
+%%\todo[inline]{SK: Make smooth transition from matrices to tensors. Present matrix results as a Lemma and use it for tensors.}
+%%\todo[inline]{SK: Definitions of B and C are not clear in unfolding of tensors.}
+
+%%\noindent Similar to the approach of ~\cite{.}, we take $||E_A||_F \le \frac{\epsilon}{\sqrt{d-1}}$. Let $B$ and $C$ correspond to unfolding of $d_1$ and $d_2$ dimensional tensors and $d_1 + d_2 = d$. For simplicity, we  assume $\frac{||E_B||_F^2}{d_1-1} = \frac{||E_C||_F^2}{d_2-1} = \delta^2$.
+%%
+%%\noindent Now we propose three heuristics such that Eq ~\ref{eq:approx} is bounded by $\epsilon$.
+%%\todo[inline]{SK: find catchy names for heuristics.}
+%%\todo[inline]{SK: mention how cauchy schwarz inequality is applied.}
+%%\begin{itemize}
+%%	\item Heuristic1: Here we select $X = I$, $Y = \Sigma_1$ and $S = I$.	
+%%	\begin{align*}
+%%	||A - \hat{B} S \hat{C}||_F^2 &\approx ||E_A||_F^2 + ||U_1IIE_C||_F^2 + ||E_BI\Sigma_1V_1^T||_F^2 \\
+%%	&\le \frac{\epsilon^2}{d-1}  + ||E_C||_F^2 + ||E_B\Sigma_1||_F^2 \\
+%%	\text{From Cauchy} & \text{-Schwarz inequality,}\\
+%%	&\le \frac{\epsilon^2}{d-1}  + ||E_C||_F^2 + ||E_B||_F^2  ||\Sigma_1||_F^2  \\
+%%	&= \frac{\epsilon^2}{d-1} + \delta^2 (d_2-1)+ \delta^2  (d_1-1) trace(\Sigma_1^2)\le \epsilon^2.
+%%	\end{align*}
+%%	\noindent After simplifying this expression we obtain
+%%	%%	
+%%	%%	\noindent $||A - \hat{B}\hat{C}||_F^2 \approx \frac{\epsilon^2}{d-1} + ||U_1IE_C||_F^2 + ||E_B\Sigma_1V_1||_F^2  \le \frac{\epsilon^2}{d-1} + \delta^2 + \delta^2 trace(\Sigma_1^2)\le \epsilon^2$. After simplifying this expression we obtain
+%%	\begin{align*}
+%%	\delta &\le \epsilon \sqrt{\frac{d-2}{(d-1) (d_2 -1 + (d_1-1) trace(\Sigma_1^2))}}.
+%%	\end{align*}
+%%	
+%%	\item Heuristic2: We choose $X=Y=\Sigma_1^{\frac{1}{2}}$ and $S=I$.
+%%	
+%%	\begin{align*}
+%%	||A - \hat{B} S \hat{C}||_F^2 &\approx ||E_A||_F^2 + ||U_1 \Sigma_1^{\frac{1}{2}} IE_C||_F^2 + ||E_B I \Sigma_1^{\frac{1}{2}} V_1^T||_F^2 \\
+%%	&\le \frac{\epsilon^2}{d-1}  + ||\Sigma_1^{\frac{1}{2}} E_C||_F^2 + ||E_B \Sigma_1^{\frac{1}{2}}||_F^2 \\
+%%	\text{From Cauchy} & \text{-Schwarz inequality,}\\
+%%	&\le \frac{\epsilon^2}{d-1}  + ||E_C||_F^2 ||\Sigma_1^{\frac{1}{2}}||_F^2 + ||E_B||_F^2  ||\Sigma_1^{\frac{1}{2}}||_F^2  \\
+%%	&= \frac{\epsilon^2}{d-1} + \delta^2 (d_2-1) trace(\Sigma_1) + \delta^2 (d_1 -1) trace(\Sigma_1)\le \epsilon^2.
+%%	\end{align*}
+%%	
+%%	%%	\noindent $||A - \hat{B}\hat{C}||_F^2 \approx \frac{\epsilon^2}{d-1} + ||U_1 \Sigma_1^{\frac{1}{2}} E_C||_F^2 + ||E_B \Sigma_1^{\frac{1}{2}} V_1||_F^2  \le \frac{\epsilon^2}{d-1} + \delta^2 trace(\Sigma_1) + \delta^2 trace(\Sigma_1)\le \epsilon^2$. 
+%%	
+%%	\noindent After simplifying this expression we obtain
+%%	\begin{align*}
+%%	\delta &\le \frac{\epsilon}{\sqrt{(d-1)trace(\Sigma_1)}}.
+%%	\end{align*}
+%%	
+%%	\item Heuristic3: We choose $X=Y=\Sigma_1$ and $S=\Sigma_1^{-1}$.
+%%	\begin{align*}
+%%	||A - \hat{B} S \hat{C}||_F^2 &\approx ||E_A||_F^2 + ||U_1\Sigma_1 \Sigma_1^{-1} E_C||_F^2 + ||E_B \Sigma_1^{-1} \Sigma_1 V_1^T||_F^2\\
+%%	&\le  \frac{\epsilon^2}{d-1} + ||E_C||_F^2 +  ||E_B||_F^2 \\
+%%	&= \frac{\epsilon^2}{d-1} + \delta^2 (d_2 -1) + \delta^2 (d_1-1) \le \epsilon^2
+%%	\end{align*}
+%%	\noindent After simplifying this expression we get
+%%	\begin{align*}
+%%	\delta &\le \frac{\epsilon}{\sqrt{d-1}}.
+%%	\end{align*}	
+%%\end{itemize}
 
 
-
-\noindent \fbox{ 
-	\begin{minipage}{0.95\linewidth}
-		\textit{Oseledets} selected $ X = I$, $S=I$ and $B = \hat{B} = U_1$, i.e., $E_B = 0$. It allows him to prove that $||A - \hat{B} S \hat{C}||_F^2$ = $||A - U_1\hat{C}||_F^2$ $\le$ $||E_A||_F^2$ + $||E_C||_F^2$.
-	\end{minipage}
-	
-}
+%%
+%%\noindent \fbox{ 
+%%	\begin{minipage}{0.95\linewidth}
+%%		\textit{Oseledets} selected $ X = I$, $S=I$ and $B = \hat{B} = U_1$, i.e., $E_B = 0$. It allows him to prove that $||A - \hat{B} S \hat{C}||_F^2$ = $||A - U_1\hat{C}||_F^2$ $\le$ $||E_A||_F^2$ + $||E_C||_F^2$.
+%%	\end{minipage}
+%%	
+%%}
 
 %%\newpage
 %%
@@ -523,7 +664,17 @@ After putting these values in $||A - \hat{B}S\hat{C}||_F^2$ expression, we get
 %%	%%	\caption{discussion on 17th Sept.}
 %%\end{figure*}
 
-\newpage
+%%\newpage
+
+\section{Experimental Results}
+\label{sec:expResults}
+\begin{itemize}
+	\item Low rank functions and their descriptions
+	\item Compression ratio tables
+	\item plot ratio of actual/min storage (may be with ratio)
+	\item Tensor arising in Molecular chemistry
+\end{itemize}
+
 
 \noindent We evaluate our heuristics for the following low rank functions.
 \begin{table}[htb]
@@ -751,52 +902,14 @@ Tables~\ref{tab:chem-10-3} and ~\ref{tab:chem-10-6} show comparison of different
 	%%		\end{minipage}
 \end{table}
 
-%%\begin{table}
-%%\caption{Table captions should be placed above the
-%%tables.}\label{tab1}
-%%\begin{tabular}{|l|l|l|}
-%%\hline
-%%Heading level &  Example & Font size and style\\
-%%\hline
-%%Title (centered) &  {\Large\bfseries Lecture Notes} & 14 point, bold\\
-%%1st-level heading &  {\large\bfseries 1 Introduction} & 12 point, bold\\
-%%2nd-level heading & {\bfseries 2.1 Printing Area} & 10 point, bold\\
-%%3rd-level heading & {\bfseries Run-in Heading in Bold.} Text follows & 10 point, bold\\
-%%4th-level heading & {\itshape Lowest Level Heading.} Text follows & 10 point, italic\\
-%%\hline
-%%\end{tabular}
-%%\end{table}
-%%
-%%
-%%\noindent Displayed equations are centered and set on a separate
-%%line.
-%%\begin{equation}
-%%x + y = z
-%%\end{equation}
-%%Please try to avoid rasterized images for line-art diagrams and
-%%schemas. Whenever possible, use vector graphics instead (see
-%%Fig.~\ref{fig1}).
-%%
-%%\begin{figure}
-%%\includegraphics[width=\textwidth]{fig1.eps}
-%%\caption{A figure caption is always placed below the illustration.
-%%Please note that short captions are centered, while long ones are
-%%justified by the macro package automatically.} \label{fig1}
-%%\end{figure}
-
-%%\begin{theorem}
-%%This is a sample theorem. The run-in heading is set in bold, while
-%%the following text appears in italics. Definitions, lemmas,
-%%propositions, and corollaries are styled the same way.
-%%\end{theorem}
-%%%
-%%% the environments 'definition', 'lemma', 'proposition', 'corollary',
-%%% 'remark', and 'example' are defined in the LLNCS documentclass as well.
-%%%
-%%\begin{proof}
-%%Proofs, examples, and remarks have the initial word in italics,
-%%while the following text appears in normal font.
-%%\end{proof}
+\section{Discussion}
+\label{sec:discussion}
+\begin{itemize}
+	\item Implementation of first svd computation
+	\item Complexity and storage of the extra buffer in H3 heuristic
+	\item Other decomposition instead of svd
+	\item Analysis of operations in both algorithms
+\end{itemize}
 
 %
 % ---- Bibliography ----
