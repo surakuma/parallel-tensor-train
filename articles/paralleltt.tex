@@ -150,32 +150,6 @@ A(i_1, i_2,\cdots ,i_d) &= \sum_{\alpha_0 = 1}^{r_0} \sum_{\alpha_1 = 1}^{r_1} \
 	\end{center}
 \end{figure}
 
-\section{Paralle Tensor Train Decomposition}
-\label{sec:ptt}
-% 2.5 pages
-\begin{itemize}
-	\item Different notations
-	\item Parallel Tensor train algorithm and its proof
-	\item Working principle with a matrix diagram and its reshape property
-	\item Its generalization idea that we can break it from anywhere
-\end{itemize}
-
-
-\section{Conclusion}
-\label{sec:conclusion}
-\begin{itemize}
-	\item Proof, heuristics and experiments
-	\item Implementation of this approach
-	\item RRQR instead of svd
-	\item Combinatorial choices to find the best order to perform TT or PTT decomposition
-\end{itemize}
-
-
-
-
-%
-\section{Tensor Train Decomposition}
-\label{sec:tt_sequential}
 
 Let $A(i_1,i_2,\cdots, i_d)$ denote the elements of a $d$-dimensional tensor \tensor{A}. The dimensions of \tensor{A} are $n_1 \times n_2 \times \cdots \times n_d$. The $k$-th unfolding matrix of tensor \tensor{A} is represented by $A_k$.
 
@@ -223,8 +197,15 @@ The \textit{Oseledets}'s TT-decomposition algorithm is sequential. It separates 
   
 %%The original TT decomposition algorithm is sequential. In this article, we modify the original algorithm so that it can run efficiently in parallel. The description of the modified algorithm is presented in the next section.
 
-\section{Parallel TT Decomposition}
+\section{Paralle Tensor Train Decomposition}
 \label{sec:tt_parallel}
+% 2.5 pages
+%%\begin{itemize}
+%%%%	\item Different notations
+%%%%	\item Parallel Tensor train algorithm and its proof
+%%	\item Working principle with a matrix diagram and its reshape property
+%%	\item Its generalization idea that we can break it from anywhere
+%%\end{itemize}
 
 The original indices of a tensor are called external indices, while the indices arise due to SVD are called internal indices. $nE$ and $nI$ denote the number of external and internal indices respectively of a tensor. A tensor with elements $A(\alpha, i_1, i_2, i_3, \beta)$ has $3$ external and $2$ internal indices. We also extend the definition of unfolding matrix to take internal indices into account. The $k$-th unfolding of tensor \tensor{A}, whose elements are $A(\alpha, i_1, i_2, \cdots,i_k, i_{k+1}, \cdots, \beta)$, is represented as,
 %%\todo[inline]{SK: define a tensor for this $A_k$ representation}
@@ -290,6 +271,15 @@ This algorithm exposes parallelism in binary tree shape. It achieves maximum $\f
 	\caption{\label{fig:4dindices} Partition of indices for a $6$-dimensional tensor by Algorithm~\ref{alg:tt_parallel}.} 
 \end{figure}
 
+
+\begin{figure}[htb]
+	\begin{center}
+		\includegraphics[scale=0.05]{./reshaping-6d.jpg}
+	\end{center}
+	\caption{Diagramatic representation of unfolding matrices at all non-leaf nodes for a $6$-dimensional tensor by Algorithm~\ref{alg:tt_parallel_approx}.\label{fig:ptt:reshaping}}
+\end{figure}
+
+\noindent Figure~\ref{fig:ptt:reshaping} illustrates the working tree of Algorithm~\ref{alg:tt_parallel_approx} for a $6$-dimensional tensor. It shows tensor at each node in its index form. Leaf nodes are assigned to the cores of TT representation. It also displays unfolding matrices for non-leaf nodes.
 
 \noindent The proof on the bound of TT ranks obtained by Algorithm~\ref{alg:tt_parallel} is described in the following theorem.
 
@@ -364,8 +354,10 @@ C = A_k^\intercal (B^\intercal)^{-1}S^{-1} &= A_k^\intercal W
 	When Algorithm~\ref{alg:tt_parallel} terminates, we have a list of tensors with exactly one external index. These tensors are cores of a TT-representation. As the above proof holds for each recursive partition, hence TT ranks of the decomposition produced by Algorithm~\ref{alg:tt_parallel} are bounded by $r_k$. This completes the proof.
 \end{proof}
 
+\indent The above proof is independent of from which index we split tensors into two subtensors. However in Algorithm~\ref{alg:tt_parallel}, we split the tensor from the middle external index.
 
-\section{Tensor Train Compression and Our Heuristics}
+
+\section{Tensor Train Approximation and Our Heuristics}
 \label{sec:heuristics}
 % 1 page
 %%\begin{itemize}
@@ -521,7 +513,12 @@ It is immediate that the expression of the previous subsection can be applied fo
 	\end{align*}	
 \end{enumerate}
 
-The following table summarizes all parameters of different heuristics for Algorithm~\ref{alg:tt_parallel_approx}. Let left and right subtensors are denoted by \tensor{B} and \tensor{C}, and have $d_1$ and $d_2$ external dimensions.
+\subsection{Additional Heuristic}
+We also consider the approximation algorithm proposed by \textit{Oseledets} in ~\cite{tt} for evaluation. This can be considered as a special case of Algorithm~\ref{alg:tt_parallel_approx}, where $X=S=I$, $Y=\Sigma_1$, and $k$ is the first left external index. In each step, left subtensor only has one external index and assigned to one of the cores of TT representation. This is a sequential algorithm. A uniform truncation of $\frac{\epsilon}{\sqrt{d-1}}$ is applied for each unfolding, which is equivalent to select $\epsilon_1=0$ and $\epsilon_2=\epsilon\sqrt{\frac{d_2-1}{d-1}}$. Approximation error of this algorithm is bounded by the sum of truncation applied for each unfolding. We refer the original paper~\cite{tt} for more details. We call this heuristic \textit{Oseledets Tensor Train Approximation} (OTTA).
+
+\medskip
+
+\noindent The following table summarizes all parameters of different heuristics for Algorithm~\ref{alg:tt_parallel_approx}. Let left and right subtensors are denoted by \tensor{B} and \tensor{C}, and have $d_1$ and $d_2$ external dimensions.
 
 \begin{table}[htb]
 \begin{tabular}{|c|c|c|c|c|}
@@ -532,8 +529,10 @@ The following table summarizes all parameters of different heuristics for Algori
 	$\epsilon\sqrt{\frac{d_1-1}{(d-1)trace(\Sigma_1)}}$ & $\epsilon\sqrt{\frac{d_2-1}{(d-1)trace(\Sigma_1)}}$\\ \hline
 	H3 & $X=Y=\Sigma_1$, $S=\Sigma_1^{-1}$ & $\frac{\epsilon}{\sqrt{d-1}}$ &
 	$\epsilon\sqrt{\frac{d_1-1}{d-1}}$ & $\epsilon\sqrt{\frac{d_2-1}{d-1}}$\\ \hline 
+	OTTA & $X=I$, $Y=\Sigma_1$, $S=I$ & $\frac{\epsilon}{\sqrt{d-1}}$ &
+	$0$ & $\epsilon\sqrt{\frac{d_2-1}{d-1}}$\\ \hline
 \end{tabular}
-\caption{Details of all considered heuristics\label{tab:heuristics}.}
+\caption{Summary of all considered heuristics\label{tab:heuristics}.}
 \end{table}
 It is not hard to observe that svd truncation of $\frac{\epsilon}{\sqrt{d-1}}$ is used for each unfolding in \textit{H3}.
 
@@ -666,7 +665,7 @@ It is not hard to observe that svd truncation of $\frac{\epsilon}{\sqrt{d-1}}$ i
 
 %%\newpage
 
-\section{Experimental Results}
+\section{Experimental Setup \& Results}
 \label{sec:expResults}
 \begin{itemize}
 	\item Low rank functions and their descriptions
@@ -675,8 +674,10 @@ It is not hard to observe that svd truncation of $\frac{\epsilon}{\sqrt{d-1}}$ i
 	\item Tensor arising in Molecular chemistry
 \end{itemize}
 
+%%We implement all our heuristics in MATLAB and run on our personal computers. 
+Our all heuristics are designed to run in parallel, but to avoid parallel implementation challenges, and to show effectiveness of our approaches we use Matlab to implement all the heuristics. We consider the tensors produced by the low rank functions of Table~\ref{tab:lowRankFunctions} for our evaluation. Such low rank functions arise in numerous application and  we refer to ~\cite{lowRankFunctions,lowRankFunction-BM-2005,lowRankFunction-HKT-2005} for more details about these functions.
 
-\noindent We evaluate our heuristics for the following low rank functions.
+%%\noindent We evaluate our heuristics for the following low rank functions.
 \begin{table}[htb]
 	\centering
 	\begin{tabular}{|l|c|}
@@ -690,7 +691,18 @@ It is not hard to observe that svd truncation of $\frac{\epsilon}{\sqrt{d-1}}$ i
 	\caption{Low rank functions.\label{tab:lowRankFunctions}}
 \end{table}
 
-\noindent First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$. This configuration produces a $12$-dimensional tensor with $4^{12}$ elements for each low rank function. Tables~\ref{tab:12-dim-10-3} and ~\ref{tab:12-dim-10-6} assess efficacy of all the proposed heuristics  for this setting.
+\subsection{Performance Metrics}
+
+Let $NE$ denote the number of entries in the original tensor. $ne_H$ and $ne_{min}$ represent the number of entries in the TT-representation produced by heuristic $H$ and the minimum number of entries in TT-representation among all considered heuristics. We consider the following two performance metrics to assess heuristic $H$ for tensor \tensor{A}.
+\begin{enumerate}
+	\item compression ratio (\textit{compr}): This is defined as, $compr(H,A)$ = $\frac{NE(A)- ne_H(A)}{NE(A)}*100$ (higher values are better). A high value for this ratio indicates that the TT-representation produced by the heuristic has a few number of entries.
+	\item ratio to minimal ($r$): This is defined as, $r(H, A) = \frac{ne_H(A)}{ne_{min}(A)}$ (lower values are better). This ratio is at least $1$ and a value close to $1$ indicates a well-suited heuristic which achieves good compression for the given tensor. 
+\end{enumerate}
+
+\subsection{Experimental Evaluation}
+
+
+First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table~\ref{tab:lowRankFunctions}. This configuration produces a $12$-dimensional tensor with $4^{12}$ elements for each low rank function. Tables~\ref{tab:12-dim-10-3} and ~\ref{tab:12-dim-10-6} assess efficacy of all the proposed heuristics  for this setting.
 
 Next we take $N=6$ and $i_j \in \{1,2 \cdots ,16\}$. This setting creates a $6$-dimensional tensor with $16^6$ elements for each low rank function of Table~\ref{tab:lowRankFunctions}. Tables~\ref{tab:6-dim-10-3} and ~\ref{tab:6-dim-10-6} compare performance of all the considered heuristics for this configuration.
 
@@ -909,6 +921,15 @@ Tables~\ref{tab:chem-10-3} and ~\ref{tab:chem-10-6} show comparison of different
 	\item Complexity and storage of the extra buffer in H3 heuristic
 	\item Other decomposition instead of svd
 	\item Analysis of operations in both algorithms
+\end{itemize}
+
+\section{Conclusion}
+\label{sec:conclusion}
+\begin{itemize}
+	\item Proof, heuristics and experiments
+	\item Implementation of this approach
+	\item RRQR instead of svd
+	\item Combinatorial choices to find the best order to perform TT or PTT decomposition
 \end{itemize}
 
 %
