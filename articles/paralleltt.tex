@@ -20,6 +20,7 @@
 \usepackage{etoolbox}
 \usepackage{xcolor}
 \usepackage{multirow}
+\usepackage{subfig}
 \setlength{\tabcolsep}{3pt}
 
 \definecolor{pdfurlcolor}{rgb}{0,0,0.6}
@@ -34,7 +35,7 @@
 \usepackage{tikz}
 \usetikzlibrary{matrix,snakes, patterns, positioning, shapes, calc, intersections, arrows, fit}
 
-\graphicspath{{./diagrams/}}
+\graphicspath{{./diagrams/}{./plots/}}
 
 %%\theoremstyle{plain}
 %%\newtheorem{lemma}{Lemma}
@@ -684,9 +685,9 @@ Our all heuristics are designed to run in parallel, but to avoid parallel implem
 		\hline
 		Log & $\log(\sum_{j=1}^{N}j i_j)$\\ \hline
 		Sin & $\sin(\sum_{j=1}^{N}i_j)$\\ \hline
-		Square-root & $\frac{1}{\sqrt{\sum_{j=1}^{N}i_j^2}}$\\ \hline
-		Cube-root & $\frac{1}{\sqrt[3]{\sum_{j=1}^{N}i_j^3}}$\\ \hline
-		Penta-root& $\frac{1}{\sqrt[5]{\sum_{j=1}^{N}i_j^5}}$\\ \hline
+		Inverse-Square-Root (\textit{ISR}) & $\frac{1}{\sqrt{\sum_{j=1}^{N}i_j^2}}$\\ \hline
+		Inverse-Cube-Root (\textit{ICR}) & $\frac{1}{\sqrt[3]{\sum_{j=1}^{N}i_j^3}}$\\ \hline
+		Inverse-Penta-Root (\textit{IPR}) & $\frac{1}{\sqrt[5]{\sum_{j=1}^{N}i_j^5}}$\\ \hline
 	\end{tabular}
 	\caption{Low rank functions.\label{tab:lowRankFunctions}}
 \end{table}
@@ -706,149 +707,251 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table
 
 Next we take $N=6$ and $i_j \in \{1,2 \cdots ,16\}$. This setting creates a $6$-dimensional tensor with $16^6$ elements for each low rank function of Table~\ref{tab:lowRankFunctions}. Tables~\ref{tab:6-dim-10-3} and ~\ref{tab:6-dim-10-6} compare performance of all the considered heuristics for this configuration.
 
-
 \begin{table}[!htb]
-	\centering\tiny
-	\rotatebox{0}{
-		%%\begin{tabular}{*{13}{|c}|}
-		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+	\centering
+	\subfloat[Prescribed accuracy = $10^{-3}$.\label{tab:dim-12-accr-10-3}]{
+		\begin{tabular}{|c|c|c|c|c|c|c|}
 			%%		\toprule
 			\hline
-			\multicolumn{13}{|c|}{12-dimensional tensors with $4^{12}$ elements}\\ \hline
-			\multicolumn{13}{|c|}{Prescribed accuracy = $10^{-3}$}\\ \hline
-			\multirow{3}{*}{Function} &  \multicolumn{2}{|c|}{\multirow{2}{*}{TT}} & \multicolumn{4}{|c|}{H1}& \multicolumn{4}{|c|}{H2} & \multicolumn{2}{|c|}{\multirow{2}{*}{H3}}\\ \cline{4-11}
-			&\multicolumn{2}{|c|}{} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{} \\ \cline{2-13}
-			{} & Com(\%) & error & Com(\%) & error 
-			& Com(\%) & error & Com(\%) & error
-			& Com(\%) & error & Com(\%) & error\\ \hline
-			Log & 99.996 & 3.6922e-04
-			& 99.995 & 0.27170 & 99.987 & 0.0018235 
-			& 99.994 & 7.1162e-05 & 99.989 & 7.0418e-05 
-			& 99.996 & 3.6922e-04 \\ \hline 
-			Sin & 99.999 & 2.6151e-09
-			& 99.999 & 1.3933e-11 & 99.999 & 1.3933e-11
-			& 99.999 & 6.1444e-12 & 99.999 & 6.1444e-12
-			& 99.999 & 1.2521e-11 \\ \hline
-			Square & 99.994 & 3.2240e-04 
-			& 99.989 & 0.0015409 & 99.985 & 2.2441e-04 
-			& 99.990 & 2.0407e-04 & 99.986 & 2.0365e-04
-			& 99.994 & 3.2234e-04\\ \hline
-			Cube & 99.991 & 4.2331e-04
-			& 99.982 & 8.7550e-04 & 99.976 & 1.6722e-04 
-			& 99.984 & 6.2147e-05 & 99.977 & 6.0975e-05
-			& 99.991 & 5.0419e-04\\ \hline
-			Penta & 99.986 & 4.7738e-04
-			& 99.976 & 0.0046476 & 99.964 & 3.7309e-04 
-			& 99.977 & 2.9834e-04 & 99.968 & 2.9810e-04
-			& 99.986 & 4.7735e-04\\ \hline
-			%%		{}   & EF   & CHF    & EF2   & CHF2\\
-			%%		1   &  17.5 & 19.1   & 17.5  & 19.1\\
-			%%		2   &  11.8 & 12.7   & 29.3  & 31.9\\
-			%%		3   &  6.6  &  5.6   & 35.9  & 37.4\\
-			%%		\bottomrule
+			Heuristic & Metric & Log & Sin & ISR & ICR & IPR\\ \hline
+			\multirow{3}{*}{OTTA} & compr  & 99.996 & 99.999 & 99.994 & 99.991 & 99.986 \\ \cline{2-7} 
+			& ne & 596 & 176 & 992 & 1580 & 2336 \\ \cline{2-7} 
+			& OA & 3.692e-04 & 2.615e-09 & 3.224e-04 & 4.233e-04 & 4.774e-04 \\ \cline{1-7}
+			\multirow{3}{*}{H1} & compr & 99.987 & 99.999 & 99.985 & 99.976 & 99.964 \\ \cline{2-7} 
+			& ne    & 2108 & 176 & 2536 & 4096 & 5960 \\ \cline{2-7} 
+			& OA    & 1.824e-03 & 1.393e-11 & 2.244e-04 & 1.672e-04 & 3.731e-04 \\ \cline{1-7} 
+			\multirow{3}{*}{H2} & compr & 99.989 & 99.999 & 99.986 & 99.977 & 99.968 \\ \cline{2-7} 
+			& ne    & 1832 & 176 & 2352 & 3840 & 5404 \\ \cline{2-7} 
+			& OA    & 7.042e-05 & 6.144e-12 & 2.036e-04 & 6.097e-05 & 2.981e-04 \\ \cline{1-7} 
+			\multirow{3}{*}{H3} & compr & 99.996 & 99.999 & 99.994 & 99.991 & 99.986 \\ \cline{2-7} 
+			& ne    & 596 & 176 & 992 & 1528 & 2336 \\ \cline{2-7} 
+			& OA    & 3.692e-04 & 1.252e-11 & 3.223e-04 & 5.042e-04 & 4.773e-04 \\ \cline{1-7}  
 		\end{tabular}
 	}
-	\caption{Comparison of different heuristics for $12$-dimensional tensors with  prescribed accuracy of $10^{-3}$.\label{tab:12-dim-10-3}}
+
+	\subfloat[Prescribed accuracy = $10^{-6}$.\label{tab:dim-12-accr-10-6}]{
+	\begin{tabular}{|c|c|c|c|c|c|c|}
+		%%		\toprule
+		\hline
+		Heuristic & Metric & Log & Sin & ISR & ICR & IPR\\ \hline
+		\multirow{3}{*}{OTTA} & compr & 99.993 & 99.999 & 99.987 & 99.981 & 99.971 \\ \cline{2-7} 
+		& ne    & 1212 & 176 & 2240 & 3184 & 4864 \\ \cline{2-7} 
+		& OA    & 2.271e-07 & 2.615e-09 & 1.834e-07 & 4.884e-07 & 4.836e-07 \\ \cline{1-7} 
+		\multirow{3}{*}{H1} & compr & 99.939 & 99.999 & 99.944 & 99.915 & 99.873 \\ \cline{2-7} 
+		& ne    & 10268 & 176 & 9312 & 14224 & 21308 \\ \cline{2-7} 
+		& OA    & 8.959e-07 & 1.393e-11 & 1.404e-07 & 9.258e-08 & 1.249e-07 \\ \cline{1-7} 
+		\multirow{3}{*}{H2} & compr & 99.799 & 99.999 & 99.952 & 99.912 & 99.870 \\ \cline{2-7} 
+		& ne    & 33772 & 176 & 8068 & 14824 & 21792 \\ \cline{2-7} 
+		& OA    & 2.820e-08 & 6.144e-12 & 1.118e-07 & 8.518e-08 & 5.664e-08 \\ \cline{1-7} 
+		\multirow{3}{*}{H3} & compr & 99.993 & 99.999 & 99.987 & 99.981 & 99.970 \\ \cline{2-7} 
+		& ne    & 1212 & 176 & 2240 & 3184 & 4964 \\ \cline{2-7} 
+		& OA    & 2.265e-07 & 1.252e-11 & 1.834e-07 & 4.884e-07 & 3.999e-07 \\ \cline{1-7}   
+	\end{tabular}
+    }
+	\caption{Comparison of different heuristics for $12$-dimensional tensors.\label{tab:dim-12}}
 \end{table}
-
-
 
 \begin{table}[!htb]
-	\centering\tiny
-	\rotatebox{0}{
-		%%\begin{tabular}{*{13}{|c}|}
-		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+	\centering
+	\subfloat[Prescribed accuracy = $10^{-3}$.\label{tab:dim-6-accr-10-3}]{
+		\begin{tabular}{|c|c|c|c|c|c|c|}
 			%%		\toprule
 			\hline
-			\multicolumn{13}{|c|}{12-dimensional tensors with $4^{12}$ elements}\\ \hline
-			\multicolumn{13}{|c|}{Prescribed accuracy = $10^{-6}$}\\ \hline
-			\multirow{3}{*}{Function} &  \multicolumn{2}{|c|}{\multirow{2}{*}{TT}} & \multicolumn{4}{|c|}{H1}& \multicolumn{4}{|c|}{H2} & \multicolumn{2}{|c|}{\multirow{2}{*}{H3}}\\ \cline{4-11}
-			&\multicolumn{2}{|c|}{} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{} \\ \cline{2-13}
-			{} & Com(\%) & error & Com(\%) & error 
-			& Com(\%) & error & Com(\%) & error
-			& Com(\%) & error & Com(\%) & error\\ \hline
-			Log & 99.993 & 2.2710e-07 & 99.965 & 7.0427e-05 & 99.939 & 8.9588e-07 & 99.983 & 2.9114e-08 & 99.799 & 2.8198e-08 & 99.993 & 2.2649e-07 \\ \hline
-			Sin & 99.999 & 2.6151e-09 & 99.999 & 1.3933e-11 & 99.999 & 1.3933e-11 & 99.999 & 6.1444e-12 & 99.999 & 6.1444e-12 & 99.999 & 1.2521e-11 \\ \hline
-			Square & 99.987 & 1.8341e-07 & 99.970 & 1.4783e-06 & 99.944 & 1.4041e-07 & 99.973 & 1.1180e-07 & 99.952 & 1.1180e-07 & 99.987 & 1.8341e-07 \\ \hline
-			Cube & 99.981 & 4.8845e-07 & 99.953 & 5.7114e-07 & 99.915 & 9.2578e-08 & 99.961 & 8.5180e-08 & 99.912 & 8.5179e-08 & 99.981 & 4.8845e-07 \\ \hline
-			Penta & 99.971 & 4.8356e-07 & 99.930 & 1.0562e-05 & 99.873 & 1.2493e-07 & 99.946 & 5.6684e-08 & 99.870 & 5.6642e-08 & 99.970 & 3.9988e-07 \\ \hline
-			%%		{}   & EF   & CHF    & EF2   & CHF2\\
-			%%		1   &  17.5 & 19.1   & 17.5  & 19.1\\
-			%%		2   &  11.8 & 12.7   & 29.3  & 31.9\\
-			%%		3   &  6.6  &  5.6   & 35.9  & 37.4\\
-			%%		\bottomrule
+			Heuristic & Metric & Log & Sin & ISR & ICR & IPR\\ \hline
+			\multirow{3}{*}{OTTA} & compr & 99.987 & 99.998 & 99.976 & 99.962 & 99.928 \\ \cline{2-7} 
+			& ne    & 2112 & 320 & 4064 & 6368 & 12032 \\ \cline{2-7} 
+			& OA    & 2.831e-04 & 4.206e-10 & 4.587e-04 & 6.149e-04 & 4.429e-04 \\ \cline{1-7} 
+			\multirow{3}{*}{H1} & compr & 99.953 & 99.998 & 99.948 & 99.920 & 99.867 \\ \cline{2-7} 
+			& ne    & 7904 & 320 & 8736 & 13472 & 22240 \\ \cline{2-7} 
+			& OA    & 7.578e-05 & 3.410e-12 & 2.080e-04 & 2.906e-04 & 2.268e-04 \\ \cline{1-7} 
+			\multirow{3}{*}{H2} & compr & 99.973 & 99.998 & 99.952 & 99.928 & 99.879 \\ \cline{2-7} 
+			& ne    & 4512 & 320 & 8096 & 12016 & 20288 \\ \cline{2-7} 
+			& OA    & 7.268e-05 & 3.486e-12 & 2.033e-04 & 2.882e-04 & 2.218e-04 \\ \cline{1-7} 
+			\multirow{3}{*}{H3} & compr & 99.987 & 99.998 & 99.976 & 99.962 & 99.928 \\ \cline{2-7} 
+			& ne    & 2112 & 320 & 4064 & 6368 & 12032 \\ \cline{2-7} 
+			& OA    & 2.832e-04 & 4.409e-12 & 4.588e-04 & 6.150e-04 & 4.430e-04 \\ \cline{1-7}  
 		\end{tabular}
 	}
-	\caption{Comparison of different heuristics for $12$-dimensional tensors with  prescribed accuracy of $10^{-6}$.\label{tab:12-dim-10-6}}
-\end{table}
-
-
-
-%%16^6 tensor results
-\begin{table}[!htb]
-	\centering\tiny
-	\rotatebox{0}{
-		%%\begin{tabular}{*{13}{|c}|}
-		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+	
+	\subfloat[Prescribed accuracy = $10^{-6}$.\label{tab:dim-6-accr-10-6}]{
+		\begin{tabular}{|c|c|c|c|c|c|c|}
 			%%		\toprule
 			\hline
-			\multicolumn{13}{|c|}{12-dimensional tensors with $16^{6}$ elements}\\ \hline
-			\multicolumn{13}{|c|}{Prescribed accuracy = $10^{-3}$}\\ \hline
-			\multirow{3}{*}{Function} &  \multicolumn{2}{|c|}{\multirow{2}{*}{TT}} & \multicolumn{4}{|c|}{H1}& \multicolumn{4}{|c|}{H2} & \multicolumn{2}{|c|}{\multirow{2}{*}{H3}}\\ \cline{4-11}
-			&\multicolumn{2}{|c|}{} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{} \\ \cline{2-13}
-			{} & Com(\%) & error & Com(\%) & error 
-			& Com(\%) & error & Com(\%) & error
-			& Com(\%) & error & Com(\%) & error\\ \hline
-			Log & 99.987 & 2.8313e-04 & 99.981 & 0.074940 & 99.953 & 7.5782e-05 & 99.983 & 2.5667e-04 & 99.973 & 7.2675e-05 & 99.987 & 2.8315e-04 \\ \hline 
-			Sin & 99.998 & 4.2061e-10 & 99.998 & 3.4096e-12 & 99.998 & 3.4096e-12 & 99.998 & 3.4856e-12 & 99.998 & 3.4856e-12 & 99.998 & 4.4089e-12 \\ \hline 
-			Square & 99.976 & 4.5874e-04 & 99.960 & 8.8471e-04 & 99.948 & 2.0805e-04 & 99.965 & 2.0653e-04 & 99.952 & 2.0326e-04 & 99.976 & 4.5881e-04 \\ \hline 
-			Cube & 99.962 & 6.1491e-04 & 99.939 & 9.5360e-04 & 99.920 & 2.9057e-04 & 99.945 & 2.8963e-04 & 99.928 & 2.8822e-04 & 99.962 & 6.1498e-04 \\ \hline 
-			Penta & 99.928 & 4.4294e-04 & 99.893 & 5.6615e-04 & 99.867 & 2.2684e-04 & 99.905 & 2.2351e-04 & 99.879 & 2.2176e-04 & 99.928 & 4.4298e-04 \\ \hline
-			%%		{}   & EF   & CHF    & EF2   & CHF2\\
-			%%		1   &  17.5 & 19.1   & 17.5  & 19.1\\
-			%%		2   &  11.8 & 12.7   & 29.3  & 31.9\\
-			%%		3   &  6.6  &  5.6   & 35.9  & 37.4\\
-			%%		\bottomrule
+			Heuristic & Metric & Log & Sin & ISR & ICR & IPR\\ \hline
+			\multirow{3}{*}{OTTA} & compr & 99.974 & 99.998 & 99.945 & 99.915 & 99.845 \\ \cline{2-7} 
+			& ne    & 4320 & 320 & 9184 & 14336 & 26048 \\ \cline{2-7} 
+			& OA    & 4.156e-07 & 4.206e-10 & 3.990e-07 & 6.983e-07 & 4.536e-07 \\ \cline{1-7} 
+			\multirow{3}{*}{H1} & compr & 99.740 & 99.998 & 99.841 & 99.783 & 99.696 \\ \cline{2-7} 
+			& ne    & 43616 & 320 & 26688 & 36352 & 50976 \\ \cline{2-7} 
+			& OA    & 1.147e-06 & 3.410e-12 & 2.841e-07 & 1.610e-07 & 1.958e-07 \\ \cline{1-7} 
+			\multirow{3}{*}{H2} & compr & 99.824 & 99.998 & 99.902 & 99.854 & 99.772 \\ \cline{2-7} 
+			& ne    & 29456 & 320 & 16416 & 24576 & 38208 \\ \cline{2-7} 
+			& OA    & 3.584e-07 & 3.486e-12 & 2.822e-07 & 1.522e-07 & 1.802e-07 \\ \cline{1-7} 
+			\multirow{3}{*}{H3} & compr & 99.974 & 99.998 & 99.945 & 99.915 & 99.845 \\ \cline{2-7} 
+			& ne    & 4320 & 320 & 9184 & 14336 & 26048 \\ \cline{2-7} 
+			& OA    & 4.156e-07 & 4.409e-12 & 3.990e-07 & 6.985e-07 & 4.538e-07 \\ \cline{1-7}   
 		\end{tabular}
 	}
-	\caption{Comparison of different heuristics for $6$-dimensional tensors with prescribed accuracy of $10^{-3}$.\label{tab:6-dim-10-3}}
+	\caption{Comparison of different heuristics for $6$-dimensional tensors.\label{tab:dim-6}}
 \end{table}
 
+\begin{figure}[!htb]
+	\begin{center}
+		\includegraphics[scale=0.35]{./ratio_to_minimal-4-12.pdf}
+	\end{center}
+\caption{Comparison of ratio to minimal for $12$-dimensional tensors.\label{fig:rtm-12}}
+\end{figure}
 
+\begin{figure}[!htb]
+	\begin{center}
+		\includegraphics[scale=0.35]{./ratio_to_minimal-16-6.pdf}
+	\end{center}
+	\caption{Comparison of ratio to minimal for $6$-dimensional tensors.\label{fig:rtm-6}}
+\end{figure}
 
-\begin{table}[!htb]
-	\centering\tiny
-	\rotatebox{0}{
-		%%\begin{tabular}{*{13}{|c}|}
-		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|}
-			%%		\toprule
-			\hline
-			\multicolumn{13}{|c|}{12-dimensional tensors with $16^{6}$ elements}\\ \hline
-			\multicolumn{13}{|c|}{Prescribed accuracy = $10^{-6}$}\\ \hline
-			\multirow{3}{*}{Function} &  \multicolumn{2}{|c|}{\multirow{2}{*}{TT}} & \multicolumn{4}{|c|}{H1}& \multicolumn{4}{|c|}{H2} & \multicolumn{2}{|c|}{\multirow{2}{*}{H3}}\\ \cline{4-11}
-			&\multicolumn{2}{|c|}{} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{} \\ \cline{2-13}
-			{} & Com(\%) & error & Com(\%) & error 
-			& Com(\%) & error & Com(\%) & error
-			& Com(\%) & error & Com(\%) & error\\ \hline
-			Log & 99.974 & 4.1557e-07 & 99.914 & 9.6639e-05 & 99.740 & 1.1468e-06 & 99.948 & 3.5888e-07 & 99.824 & 3.5837e-07 & 99.974 & 4.1556e-07 \\ \hline 
-			Sin & 99.998 & 4.2061e-10 & 99.998 & 3.4096e-12 & 99.998 & 3.4096e-12 & 99.998 & 3.4856e-12 & 99.998 & 3.4856e-12 & 99.998 & 4.4089e-12 \\ \hline 
-			Square & 99.945 & 3.9903e-07 & 99.907 & 3.3444e-07 & 99.841 & 2.8413e-07 & 99.918 & 2.8218e-07 & 99.902 & 2.8217e-07 & 99.945 & 3.9899e-07 \\ \hline 
-			Cube & 99.915 & 6.9835e-07 & 99.860 & 4.1924e-07 & 99.783 & 1.6103e-07 & 99.869 & 1.5221e-07 & 99.854 & 1.5221e-07 & 99.915 & 6.9848e-07 \\ \hline 
-			Penta & 99.845 & 4.5363e-07 & 99.772 & 1.0574e-06 & 99.696 & 1.9581e-07 & 99.794 & 1.8025e-07 & 99.772 & 1.8025e-07 & 99.845 & 4.5380e-07 \\ \hline
-			%%		{}   & EF   & CHF    & EF2   & CHF2\\
-			%%		1   &  17.5 & 19.1   & 17.5  & 19.1\\
-			%%		2   &  11.8 & 12.7   & 29.3  & 31.9\\
-			%%		3   &  6.6  &  5.6   & 35.9  & 37.4\\
-			%%		\bottomrule
-		\end{tabular}
-	}
-	\caption{Comparison of different heuristics for $6$-dimensional tensors with prescribed accuracy of $10^{-6}$.\label{tab:6-dim-10-6}}
-\end{table}
-
-
-
-%% Chemistry results
-Tables~\ref{tab:chem-10-3} and ~\ref{tab:chem-10-6} show comparison of different heuristics for 4-dimensional tensors obtained by running molecular simulations.
+%%
+%%\begin{table}[!htb]
+%%	\centering\tiny
+%%	\rotatebox{0}{
+%%		%%\begin{tabular}{*{13}{|c}|}
+%%		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+%%			%%		\toprule
+%%			\hline
+%%			\multicolumn{13}{|c|}{12-dimensional tensors with $4^{12}$ elements}\\ \hline
+%%			\multicolumn{13}{|c|}{Prescribed accuracy = $10^{-3}$}\\ \hline
+%%			\multirow{3}{*}{Function} &  \multicolumn{2}{|c|}{\multirow{2}{*}{TT}} & \multicolumn{4}{|c|}{H1}& \multicolumn{4}{|c|}{H2} & \multicolumn{2}{|c|}{\multirow{2}{*}{H3}}\\ \cline{4-11}
+%%			&\multicolumn{2}{|c|}{} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{} \\ \cline{2-13}
+%%			{} & Com(\%) & error & Com(\%) & error 
+%%			& Com(\%) & error & Com(\%) & error
+%%			& Com(\%) & error & Com(\%) & error\\ \hline
+%%			Log & 99.996 & 3.6922e-04
+%%			& 99.995 & 0.27170 & 99.987 & 0.0018235 
+%%			& 99.994 & 7.1162e-05 & 99.989 & 7.0418e-05 
+%%			& 99.996 & 3.6922e-04 \\ \hline 
+%%			Sin & 99.999 & 2.6151e-09
+%%			& 99.999 & 1.3933e-11 & 99.999 & 1.3933e-11
+%%			& 99.999 & 6.1444e-12 & 99.999 & 6.1444e-12
+%%			& 99.999 & 1.2521e-11 \\ \hline
+%%			Square & 99.994 & 3.2240e-04 
+%%			& 99.989 & 0.0015409 & 99.985 & 2.2441e-04 
+%%			& 99.990 & 2.0407e-04 & 99.986 & 2.0365e-04
+%%			& 99.994 & 3.2234e-04\\ \hline
+%%			Cube & 99.991 & 4.2331e-04
+%%			& 99.982 & 8.7550e-04 & 99.976 & 1.6722e-04 
+%%			& 99.984 & 6.2147e-05 & 99.977 & 6.0975e-05
+%%			& 99.991 & 5.0419e-04\\ \hline
+%%			Penta & 99.986 & 4.7738e-04
+%%			& 99.976 & 0.0046476 & 99.964 & 3.7309e-04 
+%%			& 99.977 & 2.9834e-04 & 99.968 & 2.9810e-04
+%%			& 99.986 & 4.7735e-04\\ \hline
+%%			%%		{}   & EF   & CHF    & EF2   & CHF2\\
+%%			%%		1   &  17.5 & 19.1   & 17.5  & 19.1\\
+%%			%%		2   &  11.8 & 12.7   & 29.3  & 31.9\\
+%%			%%		3   &  6.6  &  5.6   & 35.9  & 37.4\\
+%%			%%		\bottomrule
+%%		\end{tabular}
+%%	}
+%%	\caption{Comparison of different heuristics for $12$-dimensional tensors with  prescribed accuracy of $10^{-3}$.\label{tab:12-dim-10-3}}
+%%\end{table}
+%%
+%%
+%%
+%%\begin{table}[!htb]
+%%	\centering\tiny
+%%	\rotatebox{0}{
+%%		%%\begin{tabular}{*{13}{|c}|}
+%%		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+%%			%%		\toprule
+%%			\hline
+%%			\multicolumn{13}{|c|}{12-dimensional tensors with $4^{12}$ elements}\\ \hline
+%%			\multicolumn{13}{|c|}{Prescribed accuracy = $10^{-6}$}\\ \hline
+%%			\multirow{3}{*}{Function} &  \multicolumn{2}{|c|}{\multirow{2}{*}{TT}} & \multicolumn{4}{|c|}{H1}& \multicolumn{4}{|c|}{H2} & \multicolumn{2}{|c|}{\multirow{2}{*}{H3}}\\ \cline{4-11}
+%%			&\multicolumn{2}{|c|}{} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{} \\ \cline{2-13}
+%%			{} & Com(\%) & error & Com(\%) & error 
+%%			& Com(\%) & error & Com(\%) & error
+%%			& Com(\%) & error & Com(\%) & error\\ \hline
+%%			Log & 99.993 & 2.2710e-07 & 99.965 & 7.0427e-05 & 99.939 & 8.9588e-07 & 99.983 & 2.9114e-08 & 99.799 & 2.8198e-08 & 99.993 & 2.2649e-07 \\ \hline
+%%			Sin & 99.999 & 2.6151e-09 & 99.999 & 1.3933e-11 & 99.999 & 1.3933e-11 & 99.999 & 6.1444e-12 & 99.999 & 6.1444e-12 & 99.999 & 1.2521e-11 \\ \hline
+%%			Square & 99.987 & 1.8341e-07 & 99.970 & 1.4783e-06 & 99.944 & 1.4041e-07 & 99.973 & 1.1180e-07 & 99.952 & 1.1180e-07 & 99.987 & 1.8341e-07 \\ \hline
+%%			Cube & 99.981 & 4.8845e-07 & 99.953 & 5.7114e-07 & 99.915 & 9.2578e-08 & 99.961 & 8.5180e-08 & 99.912 & 8.5179e-08 & 99.981 & 4.8845e-07 \\ \hline
+%%			Penta & 99.971 & 4.8356e-07 & 99.930 & 1.0562e-05 & 99.873 & 1.2493e-07 & 99.946 & 5.6684e-08 & 99.870 & 5.6642e-08 & 99.970 & 3.9988e-07 \\ \hline
+%%			%%		{}   & EF   & CHF    & EF2   & CHF2\\
+%%			%%		1   &  17.5 & 19.1   & 17.5  & 19.1\\
+%%			%%		2   &  11.8 & 12.7   & 29.3  & 31.9\\
+%%			%%		3   &  6.6  &  5.6   & 35.9  & 37.4\\
+%%			%%		\bottomrule
+%%		\end{tabular}
+%%	}
+%%	\caption{Comparison of different heuristics for $12$-dimensional tensors with  prescribed accuracy of $10^{-6}$.\label{tab:12-dim-10-6}}
+%%\end{table}
+%%
+%%
+%%
+%%%%16^6 tensor results
+%%\begin{table}[!htb]
+%%	\centering\tiny
+%%	\rotatebox{0}{
+%%		%%\begin{tabular}{*{13}{|c}|}
+%%		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+%%			%%		\toprule
+%%			\hline
+%%			\multicolumn{13}{|c|}{12-dimensional tensors with $16^{6}$ elements}\\ \hline
+%%			\multicolumn{13}{|c|}{Prescribed accuracy = $10^{-3}$}\\ \hline
+%%			\multirow{3}{*}{Function} &  \multicolumn{2}{|c|}{\multirow{2}{*}{TT}} & \multicolumn{4}{|c|}{H1}& \multicolumn{4}{|c|}{H2} & \multicolumn{2}{|c|}{\multirow{2}{*}{H3}}\\ \cline{4-11}
+%%			&\multicolumn{2}{|c|}{} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{} \\ \cline{2-13}
+%%			{} & Com(\%) & error & Com(\%) & error 
+%%			& Com(\%) & error & Com(\%) & error
+%%			& Com(\%) & error & Com(\%) & error\\ \hline
+%%			Log & 99.987 & 2.8313e-04 & 99.981 & 0.074940 & 99.953 & 7.5782e-05 & 99.983 & 2.5667e-04 & 99.973 & 7.2675e-05 & 99.987 & 2.8315e-04 \\ \hline 
+%%			Sin & 99.998 & 4.2061e-10 & 99.998 & 3.4096e-12 & 99.998 & 3.4096e-12 & 99.998 & 3.4856e-12 & 99.998 & 3.4856e-12 & 99.998 & 4.4089e-12 \\ \hline 
+%%			Square & 99.976 & 4.5874e-04 & 99.960 & 8.8471e-04 & 99.948 & 2.0805e-04 & 99.965 & 2.0653e-04 & 99.952 & 2.0326e-04 & 99.976 & 4.5881e-04 \\ \hline 
+%%			Cube & 99.962 & 6.1491e-04 & 99.939 & 9.5360e-04 & 99.920 & 2.9057e-04 & 99.945 & 2.8963e-04 & 99.928 & 2.8822e-04 & 99.962 & 6.1498e-04 \\ \hline 
+%%			Penta & 99.928 & 4.4294e-04 & 99.893 & 5.6615e-04 & 99.867 & 2.2684e-04 & 99.905 & 2.2351e-04 & 99.879 & 2.2176e-04 & 99.928 & 4.4298e-04 \\ \hline
+%%			%%		{}   & EF   & CHF    & EF2   & CHF2\\
+%%			%%		1   &  17.5 & 19.1   & 17.5  & 19.1\\
+%%			%%		2   &  11.8 & 12.7   & 29.3  & 31.9\\
+%%			%%		3   &  6.6  &  5.6   & 35.9  & 37.4\\
+%%			%%		\bottomrule
+%%		\end{tabular}
+%%	}
+%%	\caption{Comparison of different heuristics for $6$-dimensional tensors with prescribed accuracy of $10^{-3}$.\label{tab:6-dim-10-3}}
+%%\end{table}
+%%
+%%
+%%
+%%\begin{table}[!htb]
+%%	\centering\tiny
+%%	\rotatebox{0}{
+%%		%%\begin{tabular}{*{13}{|c}|}
+%%		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+%%			%%		\toprule
+%%			\hline
+%%			\multicolumn{13}{|c|}{12-dimensional tensors with $16^{6}$ elements}\\ \hline
+%%			\multicolumn{13}{|c|}{Prescribed accuracy = $10^{-6}$}\\ \hline
+%%			\multirow{3}{*}{Function} &  \multicolumn{2}{|c|}{\multirow{2}{*}{TT}} & \multicolumn{4}{|c|}{H1}& \multicolumn{4}{|c|}{H2} & \multicolumn{2}{|c|}{\multirow{2}{*}{H3}}\\ \cline{4-11}
+%%			&\multicolumn{2}{|c|}{} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{} \\ \cline{2-13}
+%%			{} & Com(\%) & error & Com(\%) & error 
+%%			& Com(\%) & error & Com(\%) & error
+%%			& Com(\%) & error & Com(\%) & error\\ \hline
+%%			Log & 99.974 & 4.1557e-07 & 99.914 & 9.6639e-05 & 99.740 & 1.1468e-06 & 99.948 & 3.5888e-07 & 99.824 & 3.5837e-07 & 99.974 & 4.1556e-07 \\ \hline 
+%%			Sin & 99.998 & 4.2061e-10 & 99.998 & 3.4096e-12 & 99.998 & 3.4096e-12 & 99.998 & 3.4856e-12 & 99.998 & 3.4856e-12 & 99.998 & 4.4089e-12 \\ \hline 
+%%			Square & 99.945 & 3.9903e-07 & 99.907 & 3.3444e-07 & 99.841 & 2.8413e-07 & 99.918 & 2.8218e-07 & 99.902 & 2.8217e-07 & 99.945 & 3.9899e-07 \\ \hline 
+%%			Cube & 99.915 & 6.9835e-07 & 99.860 & 4.1924e-07 & 99.783 & 1.6103e-07 & 99.869 & 1.5221e-07 & 99.854 & 1.5221e-07 & 99.915 & 6.9848e-07 \\ \hline 
+%%			Penta & 99.845 & 4.5363e-07 & 99.772 & 1.0574e-06 & 99.696 & 1.9581e-07 & 99.794 & 1.8025e-07 & 99.772 & 1.8025e-07 & 99.845 & 4.5380e-07 \\ \hline
+%%			%%		{}   & EF   & CHF    & EF2   & CHF2\\
+%%			%%		1   &  17.5 & 19.1   & 17.5  & 19.1\\
+%%			%%		2   &  11.8 & 12.7   & 29.3  & 31.9\\
+%%			%%		3   &  6.6  &  5.6   & 35.9  & 37.4\\
+%%			%%		\bottomrule
+%%		\end{tabular}
+%%	}
+%%	\caption{Comparison of different heuristics for $6$-dimensional tensors with prescribed accuracy of $10^{-6}$.\label{tab:6-dim-10-6}}
+%%\end{table}
+%%
+%%
+%%
+%%%% Chemistry results
+%%Tables~\ref{tab:chem-10-3} and ~\ref{tab:chem-10-6} show comparison of different heuristics for 4-dimensional tensors obtained by running molecular simulations.
 
 \begin{table}[!htb]
 	\centering\tiny
