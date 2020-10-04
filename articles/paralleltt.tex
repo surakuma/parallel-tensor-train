@@ -261,7 +261,8 @@ Here we consider all indices from  the beginning to $i_{k}$ as the rows of $A_k$
 
 Algorithm~\ref{alg:tt_parallel} is recursive and returns the tensor cores of a TT decomposition for tensor \tensor{A}. It is possible to work directly with unfolding matrices in the above algorithm, however for the ease of presentation, intermediate unfolding matrices are converted to tensors several times. We can also note that selection of $X_k$, $S_k$ and $Y_k$ are not specified in line number~\ref{alg:line:xsy}. All our proofs in this paper apply no matter how these are chosen. However, the practical performance of the compression algorithm, which is based on this algorithm, depends on the selection of these matrices. In Section~\ref{sec:expResults}, we compare three options: i) $X_k=S_k=I$, $Y_k = \Sigma(1:\alpha_k; 1:\alpha_k)$ ii) $X_k = Y_k = \Sigma(1:\alpha_k; 1:\alpha_k)^{1/2}$, $S_k = I$ iii) $X_k = Y_k = \Sigma(1:\alpha_k; 1:\alpha_k)$, $S_k = \Sigma(1:\alpha_k; 1:\alpha_k)^{-1} $. In most cases, third option is often the better choice.
 
-This algorithm exposes parallelism in binary tree shape. It achieves maximum $\frac{d}{2}$-level of parallelism at the last level of the tree. Figure~\ref{fig:4dindices} shows that how indices of a $6$-dimensional tensor are divided by this algorithm.
+This algorithm exposes parallelism in binary tree shape. It achieves maximum $\frac{d}{2}$-level of parallelism at the last level of the tree.
+Figure~\ref{fig:4dindices} shows that how indices of a $6$-dimensional tensor are divided by this algorithm.
 
 %%\todo[inline]{SK: Draw final diagrams in tikz/xfig}
 
@@ -668,13 +669,12 @@ It is not hard to observe that svd truncation of $\frac{\epsilon}{\sqrt{d-1}}$ i
 
 \section{Experimental Setup \& Results}
 \label{sec:expResults}
-\begin{itemize}
-	\item Low rank functions and their descriptions
-	\item Compression ratio tables
-	\item plot ratio of actual/min storage (may be with ratio)
-	\item Tensor arising in Molecular chemistry
-\end{itemize}
-
+%%\begin{itemize}
+%%	\item Low rank functions and their descriptions
+%%	\item Compression ratio tables
+%%	\item plot ratio of actual/min storage (may be with ratio)
+%%	\item Tensor arising in Molecular chemistry
+%%\end{itemize}
 %%We implement all our heuristics in MATLAB and run on our personal computers. 
 Our all heuristics are designed to run in parallel, but to avoid parallel implementation challenges, and to show effectiveness of our approaches we use Matlab to implement all the heuristics. We consider the tensors produced by the low rank functions of Table~\ref{tab:lowRankFunctions} for our evaluation. Such low rank functions arise in numerous application and  we refer to ~\cite{lowRankFunctions,lowRankFunction-BM-2005,lowRankFunction-HKT-2005} for more details about these functions.
 
@@ -953,69 +953,108 @@ Next we take $N=6$ and $i_j \in \{1,2 \cdots ,16\}$. This setting creates a $6$-
 %%%% Chemistry results
 %%Tables~\ref{tab:chem-10-3} and ~\ref{tab:chem-10-6} show comparison of different heuristics for 4-dimensional tensors obtained by running molecular simulations.
 
-\begin{table}[!htb]
-	\centering\tiny
-	\rotatebox{0}{
-		%%		\begin{minipage}{\textheight}
-		%%\begin{tabular}{*{13}{|c}|}
-		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
-			%%		\toprule
-			\hline
-			%%				\multicolumn{13}{|c|}{12-dimensional tensors with $4^{12}$ elements}\\ \hline
-			\multicolumn{14}{|c|}{Prescribed accuracy = $10^{-3}$}\\ \hline
-			Function & TSize & \multicolumn{2}{|c|}{TT} & \multicolumn{4}{|c|}{H1}& \multicolumn{4}{|c|}{H2} & \multicolumn{2}{|c|}{H3}\\ \hline
-			{} & {} & \multicolumn{2}{|c|}{} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{} \\ \hline
-			{} & {} & Com(\%) & error & Com(\%) & error 
-			& Com(\%) & error & Com(\%) & error
-			& Com(\%) & error & Com(\%) & error\\ \hline
-			1-1-1 & $7^4$  & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 \\ \hline 
-			1-1-2 & $7^4$  & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 \\ \hline 
-			1-2   & $25^4$ & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 \\ \hline 
-			2-1-1 & $2^4$  & -50 & 2.6686e-04 & -50 & 2.6686e-04 & -50 & 2.6686e-04 & -50 & 2.6686e-04 & -50 & 2.6686e-04 & -50 & 2.6686e-04 \\ \hline 
-			2-2   & $10^4$ & 64 & 2.5359e-04 & 64 & 2.5359e-04 & 64 & 2.5359e-04 & 64 & 2.5359e-04 & 64 & 2.5359e-04 & 64 & 2.5359e-04 \\ \hline 
-			3-1   & $35^4$ & 92 & 5.5155e-04 & 92 & 5.5155e-04 & 92 & 5.5155e-04 & 92 & 5.5155e-04 & 92 & 5.5155e-04 & 92 & 5.5155e-04 \\ \hline 
-			%%		{}   & EF   & CHF    & EF2   & CHF2\\
-			%%		1   &  17.5 & 19.1   & 17.5  & 19.1\\
-			%%		2   &  11.8 & 12.7   & 29.3  & 31.9\\
-			%%		3   &  6.6  &  5.6   & 35.9  & 37.4\\
-			%%		\bottomrule
-		\end{tabular}
-	}
-	\caption{Comparison of different heuristics for Chemistry data with prescribed accuracy of $10^{-3}$.\label{tab:chem-10-3}}
-	%%		\end{minipage}
-\end{table}
+\todo[inline]{SK: Explain experiment names for molecular chemistry simulations}
+\todo[inline]{SK: Chane e-x to $\times 10^{-x}$ everywhere}
 
 \begin{table}[!htb]
-	\centering\tiny
-	\rotatebox{0}{
-		%%		\begin{minipage}{\textheight}
-		%%\begin{tabular}{*{13}{|c}|}
-		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+	\centering
+	\subfloat[Prescribed accuracy = $10^{-3}$.\label{tab:dim-4-mol-chem-accr-10-3}]{
+		\begin{tabular}{|c|c|c|c|c|c|c|c|}
 			%%		\toprule
 			\hline
-			%%				\multicolumn{13}{|c|}{12-dimensional tensors with $4^{12}$ elements}\\ \hline
-			\multicolumn{14}{|c|}{Prescribed accuracy = $10^{-6}$}\\ \hline
-			Function & TSize & \multicolumn{2}{|c|}{TT} & \multicolumn{4}{|c|}{H1}& \multicolumn{4}{|c|}{H2} & \multicolumn{2}{|c|}{H3}\\ \hline
-			{} & {} & \multicolumn{2}{|c|}{} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{} \\ \hline
-			{} & {} & Com(\%) & error & Com(\%) & error 
-			& Com(\%) & error & Com(\%) & error
-			& Com(\%) & error & Com(\%) & error\\ \hline
-			1-1-1 & $7^4$  & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 \\ \hline 
-			1-1-2 & $7^4$  & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 \\ \hline 
-			1-2   & $25^4$ & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 \\ \hline 
-			2-1-1 & $2^4$  & -100 & 5.9400e-16 & -100 & 6.3777e-16 & -100 & 6.3777e-16 & -100 & 7.6818e-16 & -100 & 7.6818e-16 & -100 & 5.0573e-16 \\ \hline 
-			2-2   & $10^4$ & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 \\ \hline 
-			3-1   & $35^4$ & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 \\ \hline 
-			%%		{}   & EF   & CHF    & EF2   & CHF2\\
-			%%		1   &  17.5 & 19.1   & 17.5  & 19.1\\
-			%%		2   &  11.8 & 12.7   & 29.3  & 31.9\\
-			%%		3   &  6.6  &  5.6   & 35.9  & 37.4\\
-			%%		\bottomrule
+			Heuristic & Metric & Exp1 & Exp2 & Exp3 & Exp4 & Exp5 & Exp6\\ \cline{3-8}
+			&& 1-1-1 & 1-1-2 & 1-2 & 2-1-1 & 2-2 & 3-1\\ \cline{2-8}
+			& NE & $7^4$ & $7^4$ & $25^4$ & $2^4$ & $10^4$ & $35^4$\\ \hline
+			\multirow{3}{*}{OTTA} & compr & 46.939 & 46.939 & 88.800 & -50.000 & 64.000 & 92.000\\ \cline{2-8}
+			& ne    & 1274 & 1274 & 43750 & 24 & 3600 & 120050\\ \cline{2-8}
+			& OA    & 1.969e-04 & 2.048e-04 & 4.819e-04 & 2.669e-04 & 2.536e-04 & 5.516e-04\\ \cline{1-8}
+			\multirow{3}{*}{H3} & compr & 46.939 & 46.939 & 88.800 & -50.000 & 64.000 & 92.000\\ \cline{2-8}
+			& ne    & 1274 & 1274 & 43750 & 24 & 3600 & 120050\\ \cline{2-8}
+			& OA    & 1.969e-04 & 2.048e-04 & 4.819e-04 & 2.669e-04 & 2.536e-04 & 5.516e-04\\ \cline{1-8}  
 		\end{tabular}
 	}
-	\caption{Comparison of different heuristics for Chemistry data with prescribed accuracy of $10^{-6}$.\label{tab:chem-10-6}}
-	%%		\end{minipage}
+	
+	\subfloat[Prescribed accuracy = $10^{-6}$.\label{tab:dim-4-mol-chem-accr-10-6}]{
+		\begin{tabular}{|c|c|c|c|c|c|c|c|}
+			%%		\toprule
+			\hline
+			Heuristic & Metric & Exp1 & Exp2 & Exp3 & Exp4 & Exp5 & Exp6\\ \cline{3-8}
+			&& 1-1-1 & 1-1-2 & 1-2 & 2-1-1 & 2-2 & 3-1\\ \cline{2-8}
+			& NE & $7^4$ & $7^4$ & $25^4$ & $2^4$ & $10^4$ & $35^4$\\ \hline
+			\multirow{3}{*}{OTTA} & compr & 6.122 & 2.041 & 73.760 & -100.000 & 32.000 & 78.775\\ \cline{2-8}
+			& ne    & 2254 & 2352 & 102500 & 32 & 6800 & 318500\\ \cline{2-8}
+			& OA    & 5.486e-07 & 1.073e-07 & 5.689e-07 & 5.940e-16 & 4.525e-07 & 5.521e-07\\ \cline{1-8}
+			\multirow{3}{*}{H3} & compr & 6.122 & 2.041 & 73.760 & -100.000 & 32.000 & 78.775\\ \cline{2-8}
+			& ne    & 2254 & 2352 & 102500 & 32 & 6800 & 318500\\ \cline{2-8}
+			& OA    & 5.486e-07 & 1.073e-07 & 5.689e-07 & 5.057e-16 & 4.525e-07 & 5.521e-07\\ \cline{1-8}  
+		\end{tabular}
+	}
+	\caption{Comparison of $OTTA$ and $H3$ for $4$-dimensional tensors generated from molecular chemistry simulations.\label{tab:dim-4-mol-chem}}
 \end{table}
+
+%%\begin{table}[!htb]
+%%	\centering\tiny
+%%	\rotatebox{0}{
+%%		%%		\begin{minipage}{\textheight}
+%%		%%\begin{tabular}{*{13}{|c}|}
+%%		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+%%			%%		\toprule
+%%			\hline
+%%			%%				\multicolumn{13}{|c|}{12-dimensional tensors with $4^{12}$ elements}\\ \hline
+%%			\multicolumn{14}{|c|}{Prescribed accuracy = $10^{-3}$}\\ \hline
+%%			Function & TSize & \multicolumn{2}{|c|}{TT} & \multicolumn{4}{|c|}{H1}& \multicolumn{4}{|c|}{H2} & \multicolumn{2}{|c|}{H3}\\ \hline
+%%			{} & {} & \multicolumn{2}{|c|}{} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{} \\ \hline
+%%			{} & {} & Com(\%) & error & Com(\%) & error 
+%%			& Com(\%) & error & Com(\%) & error
+%%			& Com(\%) & error & Com(\%) & error\\ \hline
+%%			1-1-1 & $7^4$  & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 \\ \hline 
+%%			1-1-2 & $7^4$  & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 \\ \hline 
+%%			1-2   & $25^4$ & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 \\ \hline 
+%%			2-1-1 & $2^4$  & -50 & 2.6686e-04 & -50 & 2.6686e-04 & -50 & 2.6686e-04 & -50 & 2.6686e-04 & -50 & 2.6686e-04 & -50 & 2.6686e-04 \\ \hline 
+%%			2-2   & $10^4$ & 64 & 2.5359e-04 & 64 & 2.5359e-04 & 64 & 2.5359e-04 & 64 & 2.5359e-04 & 64 & 2.5359e-04 & 64 & 2.5359e-04 \\ \hline 
+%%			3-1   & $35^4$ & 92 & 5.5155e-04 & 92 & 5.5155e-04 & 92 & 5.5155e-04 & 92 & 5.5155e-04 & 92 & 5.5155e-04 & 92 & 5.5155e-04 \\ \hline 
+%%			%%		{}   & EF   & CHF    & EF2   & CHF2\\
+%%			%%		1   &  17.5 & 19.1   & 17.5  & 19.1\\
+%%			%%		2   &  11.8 & 12.7   & 29.3  & 31.9\\
+%%			%%		3   &  6.6  &  5.6   & 35.9  & 37.4\\
+%%			%%		\bottomrule
+%%		\end{tabular}
+%%	}
+%%	\caption{Comparison of different heuristics for Chemistry data with prescribed accuracy of $10^{-3}$.\label{tab:chem-10-3}}
+%%	%%		\end{minipage}
+%%\end{table}
+%%
+%%\begin{table}[!htb]
+%%	\centering\tiny
+%%	\rotatebox{0}{
+%%		%%		\begin{minipage}{\textheight}
+%%		%%\begin{tabular}{*{13}{|c}|}
+%%		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+%%			%%		\toprule
+%%			\hline
+%%			%%				\multicolumn{13}{|c|}{12-dimensional tensors with $4^{12}$ elements}\\ \hline
+%%			\multicolumn{14}{|c|}{Prescribed accuracy = $10^{-6}$}\\ \hline
+%%			Function & TSize & \multicolumn{2}{|c|}{TT} & \multicolumn{4}{|c|}{H1}& \multicolumn{4}{|c|}{H2} & \multicolumn{2}{|c|}{H3}\\ \hline
+%%			{} & {} & \multicolumn{2}{|c|}{} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{} \\ \hline
+%%			{} & {} & Com(\%) & error & Com(\%) & error 
+%%			& Com(\%) & error & Com(\%) & error
+%%			& Com(\%) & error & Com(\%) & error\\ \hline
+%%			1-1-1 & $7^4$  & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 \\ \hline 
+%%			1-1-2 & $7^4$  & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 \\ \hline 
+%%			1-2   & $25^4$ & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 \\ \hline 
+%%			2-1-1 & $2^4$  & -100 & 5.9400e-16 & -100 & 6.3777e-16 & -100 & 6.3777e-16 & -100 & 7.6818e-16 & -100 & 7.6818e-16 & -100 & 5.0573e-16 \\ \hline 
+%%			2-2   & $10^4$ & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 \\ \hline 
+%%			3-1   & $35^4$ & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 \\ \hline 
+%%			%%		{}   & EF   & CHF    & EF2   & CHF2\\
+%%			%%		1   &  17.5 & 19.1   & 17.5  & 19.1\\
+%%			%%		2   &  11.8 & 12.7   & 29.3  & 31.9\\
+%%			%%		3   &  6.6  &  5.6   & 35.9  & 37.4\\
+%%			%%		\bottomrule
+%%		\end{tabular}
+%%	}
+%%	\caption{Comparison of different heuristics for Chemistry data with prescribed accuracy of $10^{-6}$.\label{tab:chem-10-6}}
+%%	%%		\end{minipage}
+%%\end{table}
 
 \section{Discussion}
 \label{sec:discussion}
