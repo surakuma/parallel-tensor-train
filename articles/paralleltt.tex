@@ -579,7 +579,7 @@ Let $NE$ denote the number of entries in the original tensor. $ne_H$ and $ne_{mi
 
 First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table~\ref{tab:lowRankFunctions}. This configuration produces a $12$-dimensional tensor with $4^{12}$ elements for each low rank function. We perform comparison of all the considered heuristics for the target accuracies of $10^{-3}$ and $10^{-6}$ in Table~\ref{tab:dim-12}.  
 %%Tables~\ref{tab:12-dim-10-3} and ~\ref{tab:12-dim-10-6} assess efficacy of all the proposed heuristics  for this setting.
-
+\todo[inline]{SK: Change e-x to $\times 10^{-x}$ everywhere.}
 
 \begin{table}[!htb]
 	\centering
@@ -626,8 +626,10 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table
 \end{table}
 
 \todo[inline]{SK: Explain details of Table~\ref{tab:dim-12}.}
-\noindent Next we take $N=6$ and $i_j \in \{1,2 \cdots ,16\}$. This setting creates a $6$-dimensional tensor with $16^6$ elements for each low rank function of Table~\ref{tab:lowRankFunctions}. Tables~\ref{tab:6-dim-10-3} and ~\ref{tab:6-dim-10-6} compare performance of all the considered heuristics for this configuration.
 
+\noindent Next we take $N=6$ and $i_j \in \{1,2 \cdots ,16\}$ for the functions of Table~\ref{tab:lowRankFunctions}. This configuration produces a $6$-dimensional tensor with $16^6$ elements for each function. We present our performance metrics of all the considered heuristics for these tensors in Table~\ref{tab:dim-6}.
+
+\todo[inline]{SK: Explain details of Table~\ref{tab:dim-6}.}
 \begin{table}[!htb]
 	\centering
 	\subfloat[Prescribed accuracy = $10^{-3}$.\label{tab:dim-6-accr-10-3}]{
@@ -672,6 +674,7 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table
 	\caption{Comparison of different heuristics for $6$-dimensional tensors.\label{tab:dim-6}}
 \end{table}
 
+
 \begin{figure}[!htb]
 	\begin{center}
 		\includegraphics[scale=0.35]{./ratio_to_minimal-4-12.pdf}
@@ -679,17 +682,25 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table
 \caption{Comparison of ratio to minimal for $12$-dimensional tensors.\label{fig:rtm-12}}
 \end{figure}
 
+\noindent Figure~\ref{fig:rtm-12} depicts ratio to minimal values of all the considered heuristics for 12-dimensional tensors.
+
 \begin{figure}[!htb]
 	\begin{center}
 		\includegraphics[scale=0.35]{./ratio_to_minimal-16-6.pdf}
 	\end{center}
 	\caption{Comparison of ratio to minimal for $6$-dimensional tensors.\label{fig:rtm-6}}
 \end{figure}
+Ratio to minimal values of the heuristics are for $6$- dimensional tensors are shown in Figure~\ref{fig:rtm-6}.
+\todo[inline]{SK: explain technical analysis of Figures~\ref{fig:rtm-12} and ~\ref{fig:rtm-6}.}  
+
+\subsection{Evaluation for Molecular Chemsitry Data}
 
 
-
-\todo[inline]{SK: Explain experiment names for molecular chemistry simulations}
-\todo[inline]{SK: Change e-x to $\times 10^{-x}$ everywhere}
+As we observe in previous tables, $H3$ is the best among all our proposed heuristics. Hence here we only perform comparison of $OTTA$ and $H3$ for tensors arising in molecular chemistry simulations. These are $4$-dimensional tensors of different sizes and are obtained by choosing basis sets of $H_2O$, $H_2$ and $CH_4$ molecules. Table~\ref{tab:dim-4-mol-chem} shows values of different performance metrics for these tensors. Exp1, Exp2 and Exp3 correspond to simulations with $H_2O$ molecule, while Exp4 and Exp5 correspond to simulations with $H_2$ and $CH_4$ respectively.  
+ 
+%%Choose molecule 1:H2O 2:H2 3:CH42
+%%Choose basis 1:STO-nG,2:cc-pVDZ1
+%%Choose basis 1:STO-3G 2:STO-6G1
 
 \begin{table}[!htb]
 	\centering
@@ -697,8 +708,8 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table
 		\begin{tabular}{|c|c|c|c|c|c|c|c|}
 			%%		\toprule
 			\hline
-			Heuristic & Metric & Exp1 & Exp2 & Exp3 & Exp4 & Exp5 & Exp6\\ \cline{3-8}
-			&& 1-1-1 & 1-1-2 & 1-2 & 2-1-1 & 2-2 & 3-1\\ \cline{2-8}
+			Heuristic & Metric & Exp1 & Exp2 & Exp3 & Exp4 & Exp5 & Exp6\\ \cline{2-8}
+%%			&& 1-1-1 & 1-1-2 & 1-2 & 2-1-1 & 2-2 & 3-1\\ \cline{2-8}
 			& NE & $7^4$ & $7^4$ & $25^4$ & $2^4$ & $10^4$ & $35^4$\\ \hline
 			\multirow{3}{*}{OTTA} & compr & 46.939 & 46.939 & 88.800 & -50.000 & 64.000 & 92.000\\ \cline{2-8}
 			& ne    & 1274 & 1274 & 43750 & 24 & 3600 & 120050\\ \cline{2-8}
@@ -713,8 +724,8 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table
 		\begin{tabular}{|c|c|c|c|c|c|c|c|}
 			%%		\toprule
 			\hline
-			Heuristic & Metric & Exp1 & Exp2 & Exp3 & Exp4 & Exp5 & Exp6\\ \cline{3-8}
-			&& 1-1-1 & 1-1-2 & 1-2 & 2-1-1 & 2-2 & 3-1\\ \cline{2-8}
+			Heuristic & Metric & Exp1 & Exp2 & Exp3 & Exp4 & Exp5 & Exp6\\ \cline{2-8}
+%%			&& 1-1-1 & 1-1-2 & 1-2 & 2-1-1 & 2-2 & 3-1\\ \cline{2-8}
 			& NE & $7^4$ & $7^4$ & $25^4$ & $2^4$ & $10^4$ & $35^4$\\ \hline
 			\multirow{3}{*}{OTTA} & compr & 6.122 & 2.041 & 73.760 & -100.000 & 32.000 & 78.775\\ \cline{2-8}
 			& ne    & 2254 & 2352 & 102500 & 32 & 6800 & 318500\\ \cline{2-8}
@@ -727,69 +738,7 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table
 	\caption{Comparison of $OTTA$ and $H3$ for $4$-dimensional tensors generated from molecular chemistry simulations.\label{tab:dim-4-mol-chem}}
 \end{table}
 
-%%\begin{table}[!htb]
-%%	\centering\tiny
-%%	\rotatebox{0}{
-%%		%%		\begin{minipage}{\textheight}
-%%		%%\begin{tabular}{*{13}{|c}|}
-%%		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
-%%			%%		\toprule
-%%			\hline
-%%			%%				\multicolumn{13}{|c|}{12-dimensional tensors with $4^{12}$ elements}\\ \hline
-%%			\multicolumn{14}{|c|}{Prescribed accuracy = $10^{-3}$}\\ \hline
-%%			Function & TSize & \multicolumn{2}{|c|}{TT} & \multicolumn{4}{|c|}{H1}& \multicolumn{4}{|c|}{H2} & \multicolumn{2}{|c|}{H3}\\ \hline
-%%			{} & {} & \multicolumn{2}{|c|}{} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{} \\ \hline
-%%			{} & {} & Com(\%) & error & Com(\%) & error 
-%%			& Com(\%) & error & Com(\%) & error
-%%			& Com(\%) & error & Com(\%) & error\\ \hline
-%%			1-1-1 & $7^4$  & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 & 46.9388 & 1.9694e-04 \\ \hline 
-%%			1-1-2 & $7^4$  & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 & 46.9388 & 2.0476e-04 \\ \hline 
-%%			1-2   & $25^4$ & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 & 88.8000 & 4.8189e-04 \\ \hline 
-%%			2-1-1 & $2^4$  & -50 & 2.6686e-04 & -50 & 2.6686e-04 & -50 & 2.6686e-04 & -50 & 2.6686e-04 & -50 & 2.6686e-04 & -50 & 2.6686e-04 \\ \hline 
-%%			2-2   & $10^4$ & 64 & 2.5359e-04 & 64 & 2.5359e-04 & 64 & 2.5359e-04 & 64 & 2.5359e-04 & 64 & 2.5359e-04 & 64 & 2.5359e-04 \\ \hline 
-%%			3-1   & $35^4$ & 92 & 5.5155e-04 & 92 & 5.5155e-04 & 92 & 5.5155e-04 & 92 & 5.5155e-04 & 92 & 5.5155e-04 & 92 & 5.5155e-04 \\ \hline 
-%%			%%		{}   & EF   & CHF    & EF2   & CHF2\\
-%%			%%		1   &  17.5 & 19.1   & 17.5  & 19.1\\
-%%			%%		2   &  11.8 & 12.7   & 29.3  & 31.9\\
-%%			%%		3   &  6.6  &  5.6   & 35.9  & 37.4\\
-%%			%%		\bottomrule
-%%		\end{tabular}
-%%	}
-%%	\caption{Comparison of different heuristics for Chemistry data with prescribed accuracy of $10^{-3}$.\label{tab:chem-10-3}}
-%%	%%		\end{minipage}
-%%\end{table}
-%%
-%%\begin{table}[!htb]
-%%	\centering\tiny
-%%	\rotatebox{0}{
-%%		%%		\begin{minipage}{\textheight}
-%%		%%\begin{tabular}{*{13}{|c}|}
-%%		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
-%%			%%		\toprule
-%%			\hline
-%%			%%				\multicolumn{13}{|c|}{12-dimensional tensors with $4^{12}$ elements}\\ \hline
-%%			\multicolumn{14}{|c|}{Prescribed accuracy = $10^{-6}$}\\ \hline
-%%			Function & TSize & \multicolumn{2}{|c|}{TT} & \multicolumn{4}{|c|}{H1}& \multicolumn{4}{|c|}{H2} & \multicolumn{2}{|c|}{H3}\\ \hline
-%%			{} & {} & \multicolumn{2}{|c|}{} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{NG} & \multicolumn{2}{|c|}{G} & \multicolumn{2}{|c|}{} \\ \hline
-%%			{} & {} & Com(\%) & error & Com(\%) & error 
-%%			& Com(\%) & error & Com(\%) & error
-%%			& Com(\%) & error & Com(\%) & error\\ \hline
-%%			1-1-1 & $7^4$  & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 & 6.1224 & 5.4857e-07 \\ \hline 
-%%			1-1-2 & $7^4$  & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 & 2.0408 & 1.0727e-07 \\ \hline 
-%%			1-2   & $25^4$ & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 & 73.7600 & 5.6886e-07 \\ \hline 
-%%			2-1-1 & $2^4$  & -100 & 5.9400e-16 & -100 & 6.3777e-16 & -100 & 6.3777e-16 & -100 & 7.6818e-16 & -100 & 7.6818e-16 & -100 & 5.0573e-16 \\ \hline 
-%%			2-2   & $10^4$ & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 & 32.0000 & 4.5248e-07 \\ \hline 
-%%			3-1   & $35^4$ & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 & 78.7755 & 5.5212e-07 \\ \hline 
-%%			%%		{}   & EF   & CHF    & EF2   & CHF2\\
-%%			%%		1   &  17.5 & 19.1   & 17.5  & 19.1\\
-%%			%%		2   &  11.8 & 12.7   & 29.3  & 31.9\\
-%%			%%		3   &  6.6  &  5.6   & 35.9  & 37.4\\
-%%			%%		\bottomrule
-%%		\end{tabular}
-%%	}
-%%	\caption{Comparison of different heuristics for Chemistry data with prescribed accuracy of $10^{-6}$.\label{tab:chem-10-6}}
-%%	%%		\end{minipage}
-%%\end{table}
+\todo[inline]{SK: present details of Table~\ref{tab:dim-4-mol-chem}.}
 
 \section{Discussion}
 \label{sec:discussion}
