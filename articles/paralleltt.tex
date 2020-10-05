@@ -541,14 +541,8 @@ It is not hard to observe that svd truncation of $\frac{\epsilon}{\sqrt{d-1}}$ i
 
 \section{Experimental Setup \& Results}
 \label{sec:expResults}
-%%\begin{itemize}
-%%	\item Low rank functions and their descriptions
-%%	\item Compression ratio tables
-%%	\item plot ratio of actual/min storage (may be with ratio)
-%%	\item Tensor arising in Molecular chemistry
-%%\end{itemize}
 %%We implement all our heuristics in MATLAB and run on our personal computers. 
-Our all heuristics are designed to run in parallel, but to avoid parallel implementation challenges, and to show effectiveness of our approaches we use Matlab to implement all the heuristics. We consider the tensors produced by the low rank functions of Table~\ref{tab:lowRankFunctions} for our evaluation. Such low rank functions arise in numerous application and  we refer to ~\cite{lowRankFunctions,lowRankFunction-BM-2005,lowRankFunction-HKT-2005} for more details about these functions.
+Our all heuristics are designed to run in parallel, but to avoid parallel implementation challenges and to show effectiveness of our approaches we use Matlab to implement all the heuristics. We consider the tensors produced by the low rank functions of Table~\ref{tab:lowRankFunctions} for our evaluation. Such low rank functions arise in numerous applications and we refer to~\cite{lowRankFunctions,lowRankFunction-BM-2005,lowRankFunction-HKT-2005} for more details about these functions.
 
 \begin{table}[htb]
 	\centering
@@ -567,19 +561,16 @@ Our all heuristics are designed to run in parallel, but to avoid parallel implem
 
 Let $NE$ denote the number of entries in the original tensor. $ne_H$ and $ne_{min}$ represent the number of entries in the TT-representation produced by heuristic $H$ and the minimum number of entries in TT-representation among all considered heuristics. We consider the following performance metrics to assess heuristic $H$ for tensor \tensor{A}.
 \begin{enumerate}
-	\item compression ratio (\textit{compr}): This is defined as, $compr(H,A)$ = $\frac{NE(A)- ne_H(A)}{NE(A)}*100$ (higher values are better). A high value for this ratio indicates that the TT-representation produced by the heuristic has a few number of entries.
-	\item ratio to minimal ($r$): This is defined as, $r(H, A) = \frac{ne_H(A)}{ne_{min}(A)}$ (lower values are better). This ratio is at least $1$ and a value close to $1$ indicates a well-suited heuristic which achieves good compression for the given tensor. 
+	\item compression ratio (\textit{compr}): This is defined as, $compr_H(A)$ = $\frac{NE(A)- ne_H(A)}{NE(A)}*100$ (higher values are better). A high value for this ratio indicates that the TT-representation produced by the heuristic has a few number of entries.
+	\item ratio to minimal ($r$): This is defined as, $r_H(A) = \frac{ne_H(A)}{ne_{min}(A)}$ (lower values are better). This ratio is at least $1$ and a value close to $1$ indicates a well-suited heuristic which achieves good compression for the given tensor. 
 \end{enumerate}
 
-\noindent We also observe accuracy (\textit{OA}) of the approximation for the heuristic. If the cores of TT-representation produced by the heuristic correspond to tensor \tensor{B}, then \textit{OA}(H) = $||\tensor{A}-\tensor{B}||_F$.
+\noindent We also observe accuracy (\textit{OA}) of the approximation for the heuristic. If the cores of TT-representation produced by the heuristic correspond to tensor \tensor{B}, then $OA_H$(\tensor{A}) = $||\tensor{A}-\tensor{B}||_F$.
 
 
 \subsection{Experimental Evaluation}
-
-
 First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table~\ref{tab:lowRankFunctions}. This configuration produces a $12$-dimensional tensor with $4^{12}$ elements for each low rank function. We perform comparison of all the considered heuristics for the target accuracies of $10^{-3}$ and $10^{-6}$ in Table~\ref{tab:dim-12}.  
-%%Tables~\ref{tab:12-dim-10-3} and ~\ref{tab:12-dim-10-6} assess efficacy of all the proposed heuristics  for this setting.
-\todo[inline]{SK: Change e-x to $\times 10^{-x}$ everywhere.}
+\todo[inline]{SK: Change $e-x$ to $\times 10^{-x}$ everywhere.}
 
 \begin{table}[!htb]
 	\centering
@@ -625,11 +616,18 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table
 	\caption{Comparison of different heuristics for $12$-dimensional tensors.\label{tab:dim-12}}
 \end{table}
 
-\todo[inline]{SK: Explain details of Table~\ref{tab:dim-12}.}
+%%\todo[inline]{SK: Explain details of Table~\ref{tab:dim-12}.}
+\noindent Table~\ref{tab:dim-12-accr-10-3} shows comparable compression ratios for all heuristics. $H2$ achieves slightly better compression ratios than $H1$. $H3$ compression ratios are best among all our heuristics and are also almost equal or better than $OTTA$. We can also observe that $ne$ values of ICR function are more than ISR function and less than IPR function. This indicates that the low-rank approximation of function $(\sum_j i_j^p)^\frac{1}{p}$ requires more entries as $p$ increases. $OA$ values of all heuristics are also within or close to the prescribed accuracy.
 
+%%except for the $H1$ heuristic with $Log$ function.
+\todo[inline]{SK: Find the exact term due to which $OA$ value of $H1$ heuristic with $Log$ function is more than the prescribed limit.}
+
+\noindent Table~\ref{tab:dim-12-accr-10-6} also shows similar behavior. $H3$ compression ratios are best among all our heuristics and are similar to $OTTA$. $OA$ values of all heuristics are also within the prescribed limit of $10^{-6}$.  
+   
 \noindent Next we take $N=6$ and $i_j \in \{1,2 \cdots ,16\}$ for the functions of Table~\ref{tab:lowRankFunctions}. This configuration produces a $6$-dimensional tensor with $16^6$ elements for each function. We present our performance metrics of all the considered heuristics for these tensors in Table~\ref{tab:dim-6}.
 
-\todo[inline]{SK: Explain details of Table~\ref{tab:dim-6}.}
+%%\todo[inline]{SK: Explain details of Table~\ref{tab:dim-6}.}
+%% 4.206e-10 $ 4.206e-10$  $4.206 10^{-10}$ $4.206 \times 10^{-10}$
 \begin{table}[!htb]
 	\centering
 	\subfloat[Prescribed accuracy = $10^{-3}$.\label{tab:dim-6-accr-10-3}]{
@@ -675,28 +673,33 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table
 \end{table}
 
 
+\noindent Table~\ref{tab:dim-6} displays comparable compression ratios for all heuristics. Again $H3$ compression ratios are best among all our heuristics and are same as $OTTA$. $OA$ values of all heuristics are also within or close to the prescribed accuracy. Decay of singular values for $Sin$ function is quite steep, hence performance metrics for both prescribed accuracies depict the same numbers. Sin (resp. IPR) function achieves the best (resp. worst) compression ratios among all the low rank functions of Table~\ref{tab:lowRankFunctions}.
+   
 \begin{figure}[!htb]
 	\begin{center}
-		\includegraphics[scale=0.35]{./ratio_to_minimal-4-12.pdf}
+		\includegraphics[scale=0.56]{./ratio_to_minimal-4-12.pdf}
 	\end{center}
 \caption{Comparison of ratio to minimal for $12$-dimensional tensors.\label{fig:rtm-12}}
 \end{figure}
 
-\noindent Figure~\ref{fig:rtm-12} depicts ratio to minimal values of all the considered heuristics for 12-dimensional tensors.
+\noindent Figure~\ref{fig:rtm-12} depicts $r$ values of all the considered heuristics for 12-dimensional tensors. All heuristics achieve the same compression ratio for $Sin$ function, hence $r$ values are $1$. $r_{H3}$ and $r_{OTTA}$ values are almost same and are equal to $1$. For the prescribed accuracy of $10^{-3}$, $r_{H1}$ values are between $2.5$ to $3.6$ for the other functions.$H2$ compression ratios are slightly better than $H1$, hence $r_{H2}$ values are smaller than $r_{H1}$, but still in the range of $2.25$ to $3.25$. For the prescribed accuracy of $10^{-6}$, $r_{H1}$ value for Log function is more than $25$. This indicates that $H1$ stores more than $25\times$ entries than the best heuristic. $r_{H1}$ and $r_{H2}$ are similar for ISR, ICR and IPR functions and are close to $5$.  
 
 \begin{figure}[!htb]
 	\begin{center}
-		\includegraphics[scale=0.35]{./ratio_to_minimal-16-6.pdf}
+		\includegraphics[scale=0.56]{./ratio_to_minimal-16-6.pdf}
 	\end{center}
 	\caption{Comparison of ratio to minimal for $6$-dimensional tensors.\label{fig:rtm-6}}
 \end{figure}
-Ratio to minimal values of the heuristics are for $6$- dimensional tensors are shown in Figure~\ref{fig:rtm-6}.
-\todo[inline]{SK: explain technical analysis of Figures~\ref{fig:rtm-12} and ~\ref{fig:rtm-6}.}  
+Ratio to minimal values of the heuristics for $6$- dimensional tensors are shown in Figure~\ref{fig:rtm-6}.
+
+\noindent Figure~\ref{fig:rtm-6} shows $r$ values of the heuristics for $6$-dimensional tensors. Similar to the previous plot, $r$ values of all heuristics for Sin function are $1$. ${H3}$ and ${OTTA}$ achieve similar compression, hence their values are equal and close to $1$. For the prescribed accuracy of $10^{-3}$, $r_{H1}$ value of Log function is more than $3.5$. Therefore $H1$ requires $3\times$ more storage than the best heuristic for this function. For other functions, its values are between $1.75$ to $2.25$. $r_{H2}$ values are slightly better than $r_{H1}$, and are in the range of $1.75$-$2.25$. For the prescribed accuracy of $10^{-6}$, $H1$ and $H2$ require $10\times$ and $6\times$ more storage than the best heuristic for Log function. $H1$ and $H2$ achieve close compression ratios for ISR, ICR and IPR functions. Hence their $r$ values are also close.
+
+\medskip
+\noindent From the results of this section, we notice that $OA$ values of $H2$ and $H3$ are always within the prescribed accuracy. We also observe that $H3$ is the best among all our heuristics.  
 
 \subsection{Evaluation for Molecular Chemsitry Data}
-
-
-As we observe in previous tables, $H3$ is the best among all our proposed heuristics. Hence here we only perform comparison of $OTTA$ and $H3$ for tensors arising in molecular chemistry simulations. These are $4$-dimensional tensors of different sizes and are obtained by choosing basis sets of $H_2O$, $H_2$ and $CH_4$ molecules. Table~\ref{tab:dim-4-mol-chem} shows values of different performance metrics for these tensors. Exp1, Exp2 and Exp3 correspond to simulations with $H_2O$ molecule, while Exp4 and Exp5 correspond to simulations with $H_2$ and $CH_4$ respectively.  
+%%As we observe in previous tables, 
+As $H3$ is the best among all our proposed heuristics, we will consider only $OTTA$ and $H3$ for comparison in this section. We evaluate these heuristics for tensors arising in molecular chemistry simulations. These tensors correspond to interactions between electrons of different orbitals (and virtual orbitals). Tensors are obtained by choosing a few basis sets of $H_2O$, $H_2$ and $CH_4$ molecules. The obtained tensors are $4$-dimensional and have different sizes. Table~\ref{tab:dim-4-mol-chem} shows values of different performance metrics for these tensors. Exp1, Exp2 and Exp3 correspond to simulations with $H_2O$ molecule, while Exp4 and Exp5 correspond to simulations with $H_2$ and $CH_4$ respectively.  
  
 %%Choose molecule 1:H2O 2:H2 3:CH42
 %%Choose basis 1:STO-nG,2:cc-pVDZ1
@@ -738,8 +741,8 @@ As we observe in previous tables, $H3$ is the best among all our proposed heuris
 	\caption{Comparison of $OTTA$ and $H3$ for $4$-dimensional tensors generated from molecular chemistry simulations.\label{tab:dim-4-mol-chem}}
 \end{table}
 
-\todo[inline]{SK: present details of Table~\ref{tab:dim-4-mol-chem}.}
-
+\noindent Table~\ref{tab:dim-4-mol-chem} shows that performance metrics of both heuristics are almost same. This behavior can be understand from the fact that for the considered tensors first and last cores of the approximated tensors have maximum number of entries. For instance, if $G_1$ and $G_4$ are the first and last cores of the approximation for the tensor of Exp3, then $G_1$ and $G_4$  both have $25\times25=625$ number of entries. The tensor obtained from Exp4 is very small and has only $16$ entries. TT-representation of the approximation of this tensor requires more than $16$ entries -- $24$ (resp. $32$) for the prescribed accuracy of $10^{-3}$ (resp. $10^{-6}$). For large tensors, both heuristics achieve very good compression ratios.
+ 
 \section{Discussion}
 \label{sec:discussion}
 \begin{itemize}
