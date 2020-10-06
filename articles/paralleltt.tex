@@ -83,13 +83,13 @@
 %%%%ABC Institute, Rupert-Karls-University Heidelberg, Heidelberg, Germany\\
 %%%%\email{\{abc,lncs\}@uni-heidelberg.de}}
 %%%%%
-\maketitle              % typeset the header of the contribution
+\maketitle       % typeset the header of the contribution
 
 \begin{abstract}
 The abstract should briefly summarize the contents of the paper in
 150--250 words.
 
-\keywords{First keyword  \and Second keyword \and Another keyword.}
+\keywords{First keyword \and Second keyword \and Another keyword.}
 \end{abstract}
 
 \section{Introduction}
@@ -109,10 +109,13 @@ The abstract should briefly summarize the contents of the paper in
 %0.5 page
 \begin{itemize}
 	\item Different types of tensor decompositions
-	\item Properties  and limitation of each type of tensor decomposition (Look at Osoledets's advisor work)
+	\item Properties and limitation of each type of tensor decomposition (Look at Osoledets's advisor work)
 	\item Kolda's work
 	\item Ballard's work
-	\item Solomonik's work
+	\item Solomonik's work 
+	\item Work on MTTKRP (Bora's work)
+	\item May be: Vuduc's work, Sadayappan's work
+	\item Ongoing work on TAMM (Tensor Algebra for Many body Methods)
 \end{itemize}
 
 
@@ -158,11 +161,11 @@ Let $A(i_1,i_2,\cdots, i_d)$ denote the elements of a $d$-dimensional tensor \te
 A_k &= A_k(i_1, i_2,\cdots, i_k; i_{k+1},\cdots ,i_d)
 \end{align*}
 
-\noindent The first $k$ indices represent the rows of $A_k$ and the last $d-k$ the columns of $A_k$. The size of this matrix is $(\prod_{l=1}^{k}n_l)\times(\prod_{l=k+1}^{d}n_l)$. The rank of this matrix is denoted by $r_k$. Let ($r_1, r_2,\cdots, r_{d-1}$)  denote the rank of each unfolding matrix of tensor \tensor{A}.
+\noindent The first $k$ indices represent the rows of $A_k$ and the last $d-k$ the columns of $A_k$. The size of this matrix is $(\prod_{l=1}^{k}n_l)\times(\prod_{l=k+1}^{d}n_l)$. The rank of this matrix is denoted by $r_k$. Let ($r_1, r_2,\cdots, r_{d-1}$) denote the rank of each unfolding matrix of tensor \tensor{A}.
 
 %%\noindent \textit{Oseledets} proposed an algorithm to compute Tensor Train (TT) decomposition of a tensor in ~\cite{tt}. We also describe this in Algorithm~\ref{alg:tt_original}. 
 
-\noindent \textit{Oseledets} presented an algorithm to compute Tensor Train (TT) decomposition of a tensor. Here we present the main idea of his algorithm. Let \tensor{A} be a $d$-dimensional tensor with dimensions $n_1 \times n_2 \times \cdots \times n_d$. His algorithm operates in $d-1$ steps. In each step, one dimension of the tensor is decoupled from the remaining dimensions using singular value decomposition. In the first step, \tensor{A} is represented as a matrix of size $n_1$ $\times$ $n_2 n_3 \cdots n_d$ and svd is computed for this matrix. The left singular vectors corresponding to nonzero singular values are the first core of TT-decomposition. In the second step, interaction with the first core and the second dimension are represented as rows of the matrix while other dimensions $n_3\cdots n_d$ represent the columns. Again svd is computed for this matrix and  left singular vectors are rearranged to obtain the second  core of TT-decomposition. This process is repeated for $d-1$ steps. Hence $d-1$ cores are obtained by this process. Remaining matrix, which represents the interaction with the $d-1$th core and $n_d$, constitutes the last core of the decomposition. This algorithm returns tensor cores $G_k(\alpha_{k-1}, n_k, \alpha_k) _{1\le k\le d}$ and also ensures that $\alpha_k \le r_k$. We refer the reader to the original paper for more details about this algorithm~\cite{tt}. 
+\noindent \textit{Oseledets} presented an algorithm to compute Tensor Train (TT) decomposition of a tensor. Here we present the main idea of his algorithm. Let \tensor{A} be a $d$-dimensional tensor with dimensions $n_1 \times n_2 \times \cdots \times n_d$. His algorithm operates in $d-1$ steps. In each step, one dimension of the tensor is decoupled from the remaining dimensions using singular value decomposition. In the first step, \tensor{A} is represented as a matrix of size $n_1$ $\times$ $n_2 n_3 \cdots n_d$ and svd is computed for this matrix. The left singular vectors corresponding to nonzero singular values are the first core of TT-decomposition. In the second step, interaction with the first core and the second dimension are represented as rows of the matrix while other dimensions $n_3\cdots n_d$ represent the columns. Again svd is computed for this matrix and left singular vectors are rearranged to obtain the second core of TT-decomposition. This process is repeated for $d-1$ steps. Hence $d-1$ cores are obtained by this process. Remaining matrix, which represents the interaction with the $d-1$th core and $n_d$, constitutes the last core of the decomposition. This algorithm returns tensor cores $G_k(\alpha_{k-1}, n_k, \alpha_k) _{1\le k\le d}$ and also ensures that $\alpha_k \le r_k$. We refer the reader to the original paper for more details about this algorithm~\cite{tt}. 
 
 %%%% We also describe this in Algorithm~\ref{alg:tt_original}. 
 %%
@@ -176,7 +179,7 @@ A_k &= A_k(i_1, i_2,\cdots, i_k; i_{k+1},\cdots ,i_d)
 %%		\STATE Temporary tensor $\tensor{C}=\tensor{A}$, $\alpha_0=1$
 %%		\FOR{$k=1$ \TO $d-1$} 
 %%		\STATE // matrix of size $\alpha_{k-1} n_k \times n_{k+1}\cdots n_d$
-%%		\STATE $C$ =  reshape($C, \alpha_{k-1} n_k$) 
+%%		\STATE $C$ = reshape($C, \alpha_{k-1} n_k$) 
 %%		\STATE SVD: $C=U \Sigma V^\intercal$
 %%		\STATE $\alpha_k=$ rank($\Sigma$)
 %%		\STATE // first $\alpha_k$ columns of $U$
@@ -194,8 +197,8 @@ A_k &= A_k(i_1, i_2,\cdots, i_k; i_{k+1},\cdots ,i_d)
 %%
 %%Algorithm~\ref{alg:tt_original} returns a TT decomposition of tensor \tensor{A}. It also ensures that $\alpha_k \le r_k$ $_{1\le k < d}$. We refer the reader to the original paper~\cite{tt} for more details about this algorithm. 
 
-The \textit{Oseledets}'s TT-decomposition algorithm is sequential. It separates one dimension in each step and then operate on the remaining portion in the next step. Most modern computing platforms are composed of several number of nodes and cores. Hence running a sequential algorithm on these platform may result in poor utilization of resources. In the next section, we propose a parallel algorithm to perform tensor train decomposition which exhibits $\frac{d}{2}$-level of parallelism. We also prove that the tensor cores $G_k(\beta_{k-1}, n_k, \beta_k) _{1\le k\le d}$ produced by our algorithm satisfy $\beta_k \le r_k$ $_{1\le k < d}$ property.
-  
+The \textit{Oseledets}'s TT-decomposition algorithm is sequential. It separates one dimension in each step and then operate on the remaining portion in the next step. Most modern computing platforms are composed of several number of nodes and cores. Hence running a sequential algorithm on these platforms may result in poor utilization of resources. In the next section, we propose a parallel algorithm to perform tensor train decomposition which exhibits $\frac{d}{2}$-level of parallelism. We also prove that the tensor cores $G_k(\beta_{k-1}, n_k, \beta_k) _{1\le k\le d}$ produced by our algorithm satisfy $\beta_k \le r_k$ $_{1\le k < d}$ property.
+ 
 %%The original TT decomposition algorithm is sequential. In this article, we modify the original algorithm so that it can run efficiently in parallel. The description of the modified algorithm is presented in the next section.
 
 \section{Paralle Tensor Train Decomposition}
@@ -213,7 +216,7 @@ The original indices of a tensor are called external indices, while the indices 
 \begin{align*}
 A_k &= A_k(\alpha, i_1, i_2, \cdots, i_k; i_{k+1}\cdots, \beta)
 \end{align*}
-Here we consider all indices from  the beginning to $i_{k}$ as the rows of $A_k$ and the remaining indices as the columns of $A_k$.
+Here we consider all indices from the beginning to $i_{k}$ as the rows of $A_k$ and the remaining indices as the columns of $A_k$.
 %%\todo[inline]{SK: make this function smooth for recursive calls}
 \begin{algorithm}[htb]
 	\caption{\label{alg:tt_parallel}TT-parallel (parallel Tensor Train Decomposition)}
@@ -253,7 +256,7 @@ Here we consider all indices from  the beginning to $i_{k}$ as the rows of $A_k$
 		\ENDIF
 		\STATE Compute unfolding matrix $A_k$
 		\STATE Update $A_k$, $A_k = A_kS_k$
-		\STATE  $G_k$ = Tensor($A_k$)
+		\STATE $G_k$ = Tensor($A_k$)
 		\STATE return $G_k$
 		\ENDIF
 	\end{algorithmic}
@@ -329,7 +332,7 @@ C = A_k^\intercal (B^\intercal)^{-1}S^{-1} &= A_k^\intercal W
 	\begin{align*}
 	B_{k'} &= B(i_1,i_2, \cdots, i_{k'}; i_{k'+1},\cdots,i_k, \alpha)\\
 	&= \sum_{i_{k+1}=1}^{n_{k+1}}\cdots\sum_{i_d=1}^{n_d} A(i_1, i_2, \cdots, i_d)Z(\alpha, i_{k+1},\cdots, i_d)\\
-	&= \sum_{\beta=1}^{r_{k'}}  \sum_{i_{k+1}=1}^{n_{k+1}}\cdots\sum_{i_d=1}^{n_d} F(i_1,i_2,\cdots ,i_{k'}, \beta) G(\beta, i_{k'+1},\cdots, i_d) Z(\alpha, i_{k+1},\cdots, i_d)\\
+	&= \sum_{\beta=1}^{r_{k'}} \sum_{i_{k+1}=1}^{n_{k+1}}\cdots\sum_{i_d=1}^{n_d} F(i_1,i_2,\cdots ,i_{k'}, \beta) G(\beta, i_{k'+1},\cdots, i_d) Z(\alpha, i_{k+1},\cdots, i_d)\\
 	&= \sum_{\beta=1}^{r_{k'}} F(i_1,i_2,\cdots ,i_{k'}, \beta) H(\beta,i_{k'+1},\cdots, i_k, \alpha)
 	\end{align*}
 	\noindent where,
@@ -369,9 +372,9 @@ C = A_k^\intercal (B^\intercal)^{-1}S^{-1} &= A_k^\intercal W
 
 %%Tensor decompositions are often approximated with a controllable global error to cope with noise and numerical instability. In this section, we propose different heuristics such that the approximated tensor is close to the original tensor by some prescribed accuracy.
 
-Tensor decompositions are often approximated to cope with noise and numerical instability. In practical computations, rank-$r_k$ approximation of a tensor or an approximated tensor with certain accuracy  is desired. Algorithm~\ref{alg:tt_parallel} can be used to compute rank-$r_k$ approximation of a tensor instead of exact low-rank decomposition. However we are yet to claim any optimality on its approximation and it is a part of our future work.
+Tensor decompositions are often approximated to cope with noise and numerical instability. In practical computations, rank-$r_k$ approximation of a tensor or an approximated tensor with certain accuracy is desired. Algorithm~\ref{alg:tt_parallel} can be used to compute rank-$r_k$ approximation of a tensor instead of exact low-rank decomposition. However we are yet to claim any optimality on its approximation and it is a part of our future work.
 
-We modify Algorithm~\ref{alg:tt_parallel} to compute an approximated tensor in TT-format which is close by the prescribed accuracy, and present it in Algorithm~\ref{alg:tt_parallel_approx}.
+We modify Algorithm~\ref{alg:tt_parallel} to compute an approximated tensor in TT-format that is close by the prescribed accuracy, and present it in Algorithm~\ref{alg:tt_parallel_approx}.
  
 \begin{algorithm}[htb]
 	\caption{\label{alg:tt_parallel_approx}TT-parallel-approx (parallel Tensor Train approximation)}
@@ -402,13 +405,13 @@ We modify Algorithm~\ref{alg:tt_parallel} to compute an approximated tensor in T
 		\ENDIF
 		\STATE Compute unfolding matrix $A_k$
 		\STATE Update $A_k$, $A_k = A_kS_k$
-		\STATE  $G_k$ = Tensor($A_k$)
+		\STATE $G_k$ = Tensor($A_k$)
 		\STATE return $G_k$
 		\ENDIF
 	\end{algorithmic}
 \end{algorithm}
 
-Values of $\delta$, $\epsilon_1$ and $\epsilon_2$ in Algorithm~\ref{alg:tt_parallel_approx} depend on the selection of diagonal matrices $X_k$, $Y_k$ and $S_K$. We show in next subsection that how product of approximated matrices impact the accuracy of the result when applied with svd truncation. Based on the expression of next subsection, we compute $\epsilon_1$ and $\epsilon_2$  for different choices of $X_k$, $Y_k$ and $S_K$ in Section~\ref{sec:heuristics:all}.  
+Values of $\delta$, $\epsilon_1$ and $\epsilon_2$ in Algorithm~\ref{alg:tt_parallel_approx} depend on the selection of diagonal matrices $X_k$, $Y_k$ and $S_K$. We show in next subsection that how product of approximated matrices impact the accuracy of the result when applied with svd truncation. Based on the expression of next subsection, we compute $\epsilon_1$ and $\epsilon_2$ for different choices of $X_k$, $Y_k$ and $S_K$ in Section~\ref{sec:heuristics:all}. 
 
 
 %%we propose different heuristics such that the approximated tensor is close to the original tensor by some prescribed accuracy. 
@@ -431,18 +434,18 @@ A&=(U_1 U_2)\begin{pmatrix}
 &= BSC + E_A
 \end{align*}
 
-\noindent Here $B = U_1 X$, $C=YV_1^T$ and $XSY = \Sigma_1$.  Matrices $B$ and $C$ are approximated to $\hat{B}$ and $\hat{C}$, i.e., $B = \hat{B} + E_B$ and $C = \hat{C} + E_C$. $X$, $Y$ and $S$ are diagonal matrices. $E_A$, $E_B$ and $E_C$ represent error matrices corresponding to low-rank approximation of $A$, $B$ and $C$.
+\noindent Here $B = U_1 X$, $C=YV_1^T$ and $XSY = \Sigma_1$. Matrices $B$ and $C$ are approximated to $\hat{B}$ and $\hat{C}$, i.e., $B = \hat{B} + E_B$ and $C = \hat{C} + E_C$. $X$, $Y$ and $S$ are diagonal matrices. $E_A$, $E_B$ and $E_C$ represent error matrices corresponding to low-rank approximation of $A$, $B$ and $C$.
 
 \noindent Our goal is to find an expression for $||A - \hat{B} S \hat{C}||_F$ in terms of $||E_A||_F$, $||E_B||_F$ and $||E_C||_F$.
 
 \begin{align*}
 A - \hat{B} S \hat{C} &= A - (B-E_B)S(C-E_C)\\
-&= A - BSC + BSE_C +  E_BSC - E_BSE_C\\
-&= E_A + BSE_C +  E_BSC - E_BSE_C
+&= A - BSC + BSE_C + E_BSC - E_BSE_C\\
+&= E_A + BSE_C + E_BSC - E_BSE_C
 \end{align*}
 Now we take square of Frobenius norm on both sides,
 \begin{align*}
-||A - \hat{B} S \hat{C}||_F^2 =& ||E_A + BSE_C +  E_BSC - E_BSE_C||_F^2 \\
+||A - \hat{B} S \hat{C}||_F^2 =& ||E_A + BSE_C + E_BSC - E_BSE_C||_F^2 \\
 =& ||E_A||_F^2 + ||BSE_C||_F^2 + ||E_BSC||_F^2 + ||E_BSE_C||_F^2 \\
 & + 2\boldsymbol{<}E_A, BSE_C\boldsymbol{>}_F + 2<E_A, E_BSC>_F -2 <E_A, E_BSE_C>_F\\
 & + 2 <BSE_C, E_BSC>_F -2 <BSE_C, E_BSE_C>_F - 2<E_BSC, E_BSE_C>_F
@@ -453,12 +456,12 @@ Now we take square of Frobenius norm on both sides,
 \noindent As $U$ and $V$ are othogonal matrices in singular value decomposition of $A$. Hence we obtain the following expressions:
 \begin{align*}
 U_1^TU_2 = 0 & \implies B^TE_A = 0 \implies <E_A, BSE_C>_F = 0\\
-V_1^TV_2 = 0 & \implies CE_A^T = 0 \implies <E_A, E_BSC>_F = 0  
+V_1^TV_2 = 0 & \implies CE_A^T = 0 \implies <E_A, E_BSC>_F = 0 
 \end{align*}
 After putting these values in $||A - \hat{B}S\hat{C}||_F^2$ expression, we get
 \begin{align*}
 ||A - \hat{B} S \hat{C}||_F^2 =& ||E_A||_F^2 + ||BSE_C||_F^2 + ||E_BSC||_F^2 + ||E_BSE_C||_F^2 \\
-& -2 <E_A, E_BSE_C>_F  + 2 <BSE_C, E_BSC>_F\\
+& -2 <E_A, E_BSE_C>_F + 2 <BSE_C, E_BSC>_F\\
 & -2 <BSE_C, E_BSE_C>_F - 2<E_BSC, E_BSE_C>_F
 \end{align*}
 
@@ -472,17 +475,17 @@ After putting these values in $||A - \hat{B}S\hat{C}||_F^2$ expression, we get
 \subsection{Different Heuristics}
 \label{sec:heuristics:all}
 
-It is immediate that the expression of the previous subsection can be applied for each unfolding of Algorithm~\ref{alg:tt_parallel_approx}. Similar to the approach of~\cite{tt}, we take $||E_{A_k}||_F \le \frac{\epsilon}{\sqrt{d-1}}$. Let $B$ and $C$ correspond to unfolding of $d_1$ and $d_2$ dimensional tensors and $d_1 + d_2 = d$. For simplicity, we  assume $\frac{||E_B||_F^2}{d_1-1} = \frac{||E_C||_F^2}{d_2-1} = \delta^2$. This implies $\frac{\epsilon_1^2}{d_1-1} = \frac{\epsilon_2^2}{d_2-1} = \delta^2$.
+It is immediate that the expression of the previous subsection can be applied for each unfolding of Algorithm~\ref{alg:tt_parallel_approx}. Similar to the approach of~\cite{tt}, we take $||E_{A_k}||_F \le \frac{\epsilon}{\sqrt{d-1}}$. Let $B$ and $C$ correspond to unfolding of $d_1$ and $d_2$ dimensional tensors and $d_1 + d_2 = d$. For simplicity, we assume $\frac{||E_B||_F^2}{d_1-1} = \frac{||E_C||_F^2}{d_2-1} = \delta^2$. This implies $\frac{\epsilon_1^2}{d_1-1} = \frac{\epsilon_2^2}{d_2-1} = \delta^2$.
 
-\noindent Now we propose three heuristics such that overall error of approximation of Alogrithm~\ref{alg:tt_parallel_approx} is close or less to $\epsilon$.
+\noindent Now we propose three heuristics such that overall error of approximation of Alogrithm~\ref{alg:tt_parallel_approx} is less than or close to $\epsilon$.
 \begin{enumerate}
 	\item \textit{H1}: Here we select $X = I$, $Y = \Sigma_1$ and $S = I$.	
 	\begin{align*}
 	||A - \hat{B} S \hat{C}||_F^2 &\approx ||E_A||_F^2 + ||U_1IIE_C||_F^2 + ||E_BI\Sigma_1V_1^T||_F^2 \\
-	&\le \frac{\epsilon^2}{d-1}  + ||E_C||_F^2 + ||E_B\Sigma_1||_F^2 \\
+	&\le \frac{\epsilon^2}{d-1} + ||E_C||_F^2 + ||E_B\Sigma_1||_F^2 \\
 	\text{From Cauchy} & \text{-Schwarz inequality,}\\
-	&\le \frac{\epsilon^2}{d-1}  + ||E_C||_F^2 + ||E_B||_F^2  ||\Sigma_1||_F^2  \\
-	&= \frac{\epsilon^2}{d-1} + \delta^2 (d_2-1)+ \delta^2  (d_1-1) trace(\Sigma_1^2)\le \epsilon^2.
+	&\le \frac{\epsilon^2}{d-1} + ||E_C||_F^2 + ||E_B||_F^2 ||\Sigma_1||_F^2 \\
+	&= \frac{\epsilon^2}{d-1} + \delta^2 (d_2-1)+ \delta^2 (d_1-1) trace(\Sigma_1^2)\le \epsilon^2.
 	\end{align*}
 	\noindent After simplifying this expression we obtain
 	\begin{align*}
@@ -493,9 +496,9 @@ It is immediate that the expression of the previous subsection can be applied fo
 	
 	\begin{align*}
 	||A - \hat{B} S \hat{C}||_F^2 &\approx ||E_A||_F^2 + ||U_1 \Sigma_1^{\frac{1}{2}} IE_C||_F^2 + ||E_B I \Sigma_1^{\frac{1}{2}} V_1^T||_F^2 \\
-	&\le \frac{\epsilon^2}{d-1}  + ||\Sigma_1^{\frac{1}{2}} E_C||_F^2 + ||E_B \Sigma_1^{\frac{1}{2}}||_F^2 \\
+	&\le \frac{\epsilon^2}{d-1} + ||\Sigma_1^{\frac{1}{2}} E_C||_F^2 + ||E_B \Sigma_1^{\frac{1}{2}}||_F^2 \\
 	\text{From Cauchy} & \text{-Schwarz inequality,}\\
-	&\le \frac{\epsilon^2}{d-1}  + ||E_C||_F^2 ||\Sigma_1^{\frac{1}{2}}||_F^2 + ||E_B||_F^2  ||\Sigma_1^{\frac{1}{2}}||_F^2  \\
+	&\le \frac{\epsilon^2}{d-1} + ||E_C||_F^2 ||\Sigma_1^{\frac{1}{2}}||_F^2 + ||E_B||_F^2 ||\Sigma_1^{\frac{1}{2}}||_F^2 \\
 	&= \frac{\epsilon^2}{d-1} + \delta^2 (d_2-1) trace(\Sigma_1) + \delta^2 (d_1 -1) trace(\Sigma_1)\le \epsilon^2.
 	\end{align*} 
 	\noindent After simplifying this expression we obtain
@@ -506,7 +509,7 @@ It is immediate that the expression of the previous subsection can be applied fo
 	\item \textit{H3}: We choose $X=Y=\Sigma_1$ and $S=\Sigma_1^{-1}$.
 	\begin{align*}
 	||A - \hat{B} S \hat{C}||_F^2 &\approx ||E_A||_F^2 + ||U_1\Sigma_1 \Sigma_1^{-1} E_C||_F^2 + ||E_B \Sigma_1^{-1} \Sigma_1 V_1^T||_F^2\\
-	&\le  \frac{\epsilon^2}{d-1} + ||E_C||_F^2 +  ||E_B||_F^2 \\
+	&\le \frac{\epsilon^2}{d-1} + ||E_C||_F^2 + ||E_B||_F^2 \\
 	&= \frac{\epsilon^2}{d-1} + \delta^2 (d_2 -1) + \delta^2 (d_1-1) \le \epsilon^2
 	\end{align*}
 	\noindent After simplifying this expression we get
@@ -526,7 +529,7 @@ We also consider the approximation algorithm proposed by \textit{Oseledets} in ~
 \begin{tabular}{|c|c|c|c|c|}
 	\hline
 	Heuristic & Description & $\epsilon_{A_k}$ & $\epsilon_1$ & $\epsilon_2$\\ \hline
-	H1 &  $X = I$, $Y = \Sigma_1$, $S = I$ & $\frac{\epsilon}{\sqrt{d-1}}$ & $\epsilon \sqrt{\frac{(d-2)(d_1-1)}{(d-1) (d_2 -1 + (d_1-1) trace(\Sigma_1^2))}}$ & $\epsilon \sqrt{\frac{(d-2)(d_2-1)}{(d-1) (d_2 -1 + (d_1-1) trace(\Sigma_1^2))}}$\\ \hline
+	H1 & $X = I$, $Y = \Sigma_1$, $S = I$ & $\frac{\epsilon}{\sqrt{d-1}}$ & $\epsilon \sqrt{\frac{(d-2)(d_1-1)}{(d-1) (d_2 -1 + (d_1-1) trace(\Sigma_1^2))}}$ & $\epsilon \sqrt{\frac{(d-2)(d_2-1)}{(d-1) (d_2 -1 + (d_1-1) trace(\Sigma_1^2))}}$\\ \hline
 	H2 & $X=Y=\Sigma_1^{\frac{1}{2}}$, $S=I$ & $\frac{\epsilon}{\sqrt{d-1}}$ &
 	$\epsilon\sqrt{\frac{d_1-1}{(d-1)trace(\Sigma_1)}}$ & $\epsilon\sqrt{\frac{d_2-1}{(d-1)trace(\Sigma_1)}}$\\ \hline
 	H3 & $X=Y=\Sigma_1$, $S=\Sigma_1^{-1}$ & $\frac{\epsilon}{\sqrt{d-1}}$ &
@@ -569,7 +572,7 @@ Let $NE$ denote the number of entries in the original tensor. $ne_H$ and $ne_{mi
 
 
 \subsection{Experimental Evaluation}
-First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table~\ref{tab:lowRankFunctions}. This configuration produces a $12$-dimensional tensor with $4^{12}$ elements for each low rank function. We perform comparison of all the considered heuristics for the target accuracies of $10^{-3}$ and $10^{-6}$ in Table~\ref{tab:dim-12}.  
+First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table~\ref{tab:lowRankFunctions}. This configuration produces a $12$-dimensional tensor with $4^{12}$ elements for each low rank function. We perform comparison of all the considered heuristics for the target accuracies of $10^{-3}$ and $10^{-6}$ in Table~\ref{tab:dim-12}. 
 \todo[inline]{SK: Change $e-x$ to $\times 10^{-x}$ everywhere.}
 
 \begin{table}[!htb]
@@ -579,7 +582,7 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table
 			%%		\toprule
 			\hline
 			Heuristic & Metric & Log & Sin & ISR & ICR & IPR\\ \hline
-			\multirow{3}{*}{OTTA} & compr  & 99.996 & 99.999 & 99.994 & 99.991 & 99.986 \\ \cline{2-7} 
+			\multirow{3}{*}{OTTA} & compr & 99.996 & 99.999 & 99.994 & 99.991 & 99.986 \\ \cline{2-7} 
 			& ne & 596 & 176 & 992 & 1580 & 2336 \\ \cline{2-7} 
 			& OA & 3.692e-04 & 2.615e-09 & 3.224e-04 & 4.233e-04 & 4.774e-04 \\ \cline{1-7}
 			\multirow{3}{*}{H1} & compr & 99.987 & 99.999 & 99.985 & 99.976 & 99.964 \\ \cline{2-7} 
@@ -622,12 +625,12 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table
 %%except for the $H1$ heuristic with $Log$ function.
 \todo[inline]{SK: Find the exact term due to which $OA$ value of $H1$ heuristic with $Log$ function is more than the prescribed limit.}
 
-\noindent Table~\ref{tab:dim-12-accr-10-6} also shows similar behavior. $H3$ compression ratios are best among all our heuristics and are similar to $OTTA$. $OA$ values of all heuristics are also within the prescribed limit of $10^{-6}$.  
-   
+\noindent Table~\ref{tab:dim-12-accr-10-6} also shows similar behavior. $H3$ compression ratios are best among all our heuristics and are similar to $OTTA$. $OA$ values of all heuristics are also within the prescribed limit of $10^{-6}$. 
+  
 \noindent Next we take $N=6$ and $i_j \in \{1,2 \cdots ,16\}$ for the functions of Table~\ref{tab:lowRankFunctions}. This configuration produces a $6$-dimensional tensor with $16^6$ elements for each function. We present our performance metrics of all the considered heuristics for these tensors in Table~\ref{tab:dim-6}.
 
 %%\todo[inline]{SK: Explain details of Table~\ref{tab:dim-6}.}
-%% 4.206e-10 $ 4.206e-10$  $4.206 10^{-10}$ $4.206 \times 10^{-10}$
+%% 4.206e-10 $ 4.206e-10$ $4.206 10^{-10}$ $4.206 \times 10^{-10}$
 \begin{table}[!htb]
 	\centering
 	\subfloat[Prescribed accuracy = $10^{-3}$.\label{tab:dim-6-accr-10-3}]{
@@ -674,7 +677,7 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table
 
 
 \noindent Table~\ref{tab:dim-6} displays comparable compression ratios for all heuristics. Again $H3$ compression ratios are best among all our heuristics and are same as $OTTA$. $OA$ values of all heuristics are also within or close to the prescribed accuracy. Decay of singular values for $Sin$ function is quite steep, hence performance metrics for both prescribed accuracies depict the same numbers. Sin (resp. IPR) function achieves the best (resp. worst) compression ratios among all the low rank functions of Table~\ref{tab:lowRankFunctions}.
-   
+  
 \begin{figure}[!htb]
 	\begin{center}
 		\includegraphics[scale=0.56]{./ratio_to_minimal-4-12.pdf}
@@ -682,7 +685,7 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table
 \caption{Comparison of ratio to minimal for $12$-dimensional tensors.\label{fig:rtm-12}}
 \end{figure}
 
-\noindent Figure~\ref{fig:rtm-12} depicts $r$ values of all the considered heuristics for 12-dimensional tensors. All heuristics achieve the same compression ratio for $Sin$ function, hence $r$ values are $1$. $r_{H3}$ and $r_{OTTA}$ values are almost same and are equal to $1$. For the prescribed accuracy of $10^{-3}$, $r_{H1}$ values are between $2.5$ to $3.6$ for the other functions.$H2$ compression ratios are slightly better than $H1$, hence $r_{H2}$ values are smaller than $r_{H1}$, but still in the range of $2.25$ to $3.25$. For the prescribed accuracy of $10^{-6}$, $r_{H1}$ value for Log function is more than $25$. This indicates that $H1$ stores more than $25\times$ entries than the best heuristic. $r_{H1}$ and $r_{H2}$ are similar for ISR, ICR and IPR functions and are close to $5$.  
+\noindent Figure~\ref{fig:rtm-12} depicts $r$ values of all the considered heuristics for 12-dimensional tensors. All heuristics achieve the same compression ratio for $Sin$ function, hence $r$ values are $1$. $r_{H3}$ and $r_{OTTA}$ values are almost same and are equal to $1$. For the prescribed accuracy of $10^{-3}$, $r_{H1}$ values are between $2.5$ to $3.6$ for the other functions. $H2$ compression ratios are slightly better than $H1$, hence $r_{H2}$ values are smaller than $r_{H1}$, but still in the range of $2.25$ to $3.25$. For the prescribed accuracy of $10^{-6}$, $r_{H1}$ value for Log function is more than $25$. This indicates that $H1$ stores $25\times$ more entries than the best heuristic. $r_{H1}$ and $r_{H2}$ are similar for ISR, ICR and IPR functions and are close to $5$. 
 
 \begin{figure}[!htb]
 	\begin{center}
@@ -690,16 +693,16 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}$ for the functions of Table
 	\end{center}
 	\caption{Comparison of ratio to minimal for $6$-dimensional tensors.\label{fig:rtm-6}}
 \end{figure}
-Ratio to minimal values of the heuristics for $6$- dimensional tensors are shown in Figure~\ref{fig:rtm-6}.
+%%Ratio to minimal values of the heuristics for $6$- dimensional tensors are shown in Figure~\ref{fig:rtm-6}.
 
 \noindent Figure~\ref{fig:rtm-6} shows $r$ values of the heuristics for $6$-dimensional tensors. Similar to the previous plot, $r$ values of all heuristics for Sin function are $1$. ${H3}$ and ${OTTA}$ achieve similar compression, hence their values are equal and close to $1$. For the prescribed accuracy of $10^{-3}$, $r_{H1}$ value of Log function is more than $3.5$. Therefore $H1$ requires $3\times$ more storage than the best heuristic for this function. For other functions, its values are between $1.75$ to $2.25$. $r_{H2}$ values are slightly better than $r_{H1}$, and are in the range of $1.75$-$2.25$. For the prescribed accuracy of $10^{-6}$, $H1$ and $H2$ require $10\times$ and $6\times$ more storage than the best heuristic for Log function. $H1$ and $H2$ achieve close compression ratios for ISR, ICR and IPR functions. Hence their $r$ values are also close.
 
 \medskip
-\noindent From the results of this section, we notice that $OA$ values of $H2$ and $H3$ are always within the prescribed accuracy. We also observe that $H3$ is the best among all our heuristics.  
+\noindent From the results of this section, we notice that $OA$ values of $H2$ and $H3$ are always within the prescribed accuracy. We also observe that $H3$ achieves the best compression ratios among all our heuristics. 
 
 \subsection{Evaluation for Molecular Chemsitry Data}
 %%As we observe in previous tables, 
-As $H3$ is the best among all our proposed heuristics, we will consider only $OTTA$ and $H3$ for comparison in this section. We evaluate these heuristics for tensors arising in molecular chemistry simulations. These tensors correspond to interactions between electrons of different orbitals (and virtual orbitals). Tensors are obtained by choosing a few basis sets of $H_2O$, $H_2$ and $CH_4$ molecules. The obtained tensors are $4$-dimensional and have different sizes. Table~\ref{tab:dim-4-mol-chem} shows values of different performance metrics for these tensors. Exp1, Exp2 and Exp3 correspond to simulations with $H_2O$ molecule, while Exp4 and Exp5 correspond to simulations with $H_2$ and $CH_4$ respectively.  
+As $H3$ is the best among all our proposed heuristics, we will consider only $OTTA$ and $H3$ for comparison in this section. We evaluate these heuristics for tensors arising in molecular chemistry simulations. These tensors correspond to interactions between electrons of different orbitals (and virtual orbitals), and are obtained by choosing different basis sets of $H_2O$, $H_2$ and $CH_4$ molecules. The obtained tensors are $4$-dimensional and have distinct sizes. Table~\ref{tab:dim-4-mol-chem} shows values of performance metrics for these tensors. Exp1, Exp2 and Exp3 correspond to simulations with $H_2O$ molecule, while Exp4 and Exp5 correspond to simulations with $H_2$ and $CH_4$ respectively. 
  
 %%Choose molecule 1:H2O 2:H2 3:CH42
 %%Choose basis 1:STO-nG,2:cc-pVDZ1
@@ -741,7 +744,7 @@ As $H3$ is the best among all our proposed heuristics, we will consider only $OT
 	\caption{Comparison of $OTTA$ and $H3$ for $4$-dimensional tensors generated from molecular chemistry simulations.\label{tab:dim-4-mol-chem}}
 \end{table}
 
-\noindent Table~\ref{tab:dim-4-mol-chem} shows that performance metrics of both heuristics are almost same. This behavior can be understand from the fact that for the considered tensors first and last cores of the approximated tensors have maximum number of entries. For instance, if $G_1$ and $G_4$ are the first and last cores of the approximation for the tensor of Exp3, then $G_1$ and $G_4$  both have $25\times25=625$ number of entries. The tensor obtained from Exp4 is very small and has only $16$ entries. TT-representation of the approximation of this tensor requires more than $16$ entries -- $24$ (resp. $32$) for the prescribed accuracy of $10^{-3}$ (resp. $10^{-6}$). For large tensors, both heuristics achieve very good compression ratios.
+\noindent Table~\ref{tab:dim-4-mol-chem} shows that performance metrics of both heuristics are almost same. This behavior can be understand from the fact that for the considered tensors first and last cores of the approximated tensors have maximum number of entries. For instance, if $G_1$ and $G_4$ are the first and last cores of the approximation for the tensor of Exp3, then $G_1$ and $G_4$ both have $25\times25=625$ number of entries. The tensor obtained from Exp4 is very small and has only $16$ entries. TT-representation of the approximation of this tensor requires more than $16$ entries -- $24$ (resp. $32$) for the prescribed accuracy of $10^{-3}$ (resp. $10^{-6}$). For intermediate and large size tensors, both heuristics achieve very good compression ratios.
  
 \section{Discussion}
 \label{sec:discussion}
