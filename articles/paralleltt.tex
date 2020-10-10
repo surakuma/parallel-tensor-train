@@ -1,7 +1,3 @@
-% This is samplepaper.tex, a sample chapter demonstrating the
-% LLNCS macro package for Springer Computer Science proceedings;
-% Version 2.20 of 2017/10/04
-%
 \documentclass[runningheads]{llncs}
 %
 \usepackage[utf8]{inputenc}
@@ -95,27 +91,49 @@ The abstract should briefly summarize the contents of the paper in
 \section{Introduction}
 \label{sec:introduction}
 % 1-page
-\begin{itemize}
+%%\begin{itemize}
 %%	\item Popularity of tensors
-	\item Need towards developing parallel and communication efficient algorithms
-	\item HPC supercomputers
+%%	\item Need towards developing parallel and communication efficient algorithms
+%%	\item HPC supercomputers
 %%	\item tensor decomposition uses in Machine learning, Chemistry applications
-	\item intuition behind Tensor train decomposition and its properties
-	\item division of indices for TT and PTT decomposition
-	\item outline of this paper
+%%	\item intuition behind Tensor train decomposition and its properties
+%%	\item division of indices for TT and PTT decomposition
+%%	\item outline of this paper
+%%\end{itemize}
+Multidimensional data are ubiquitous in scientific modeling. Tensors are becoming a popular choice in recent years to represent and manipulate such data. Tensor decomposition and approximation play important roles in several domains, for instance, quantum molecular dynamics, signal processing, numerical linear algebra, scientific simulations, data mining, neuroscience, computer vision, psychometrics, linguistics, chemometrics and more. Tensor decomposition based methods are also being used in drug discovery for the current pandemic~\cite{tensormethod-dd1,tensormethod-dd2}. We point the reader to~\cite{tensor-basics} for a nice survey on tensor decompositions and applications.
+\todo[inline]{SK: Make smooth transition between paragraphs.}
+Historically there has been a great emphasis on minmizing the complexity of computations. With the advent of multicores, the focus has shifted towards developing parallel algorithms. In recent years, the number of computational cores has increased drastically and communication becomes bottleneck for an application. Thus the focus is now moving towards developing parallel and communication optimal algorithms~\cite{qr-lu-2012,yelick2016,Ballard-mcnla-2011}.
+
+Recent advances in high performance architectures make us enable to find efficient solutions for some of the most challenging scientific problems. Solving problems with large tensors on such architectures is still tough due to their large computational effort and memory requirements (amount of memory and computations grow exponentially in number of dimensions). These problems can not be tackled directly. It is therefore necessary to exploit patterns of the data. Finding low dimensional structure of high dimensional data is a powerful approach in this context. Several tensor representations such as CP, Tucker, Tensor-Train are based on low dimensional structure of the tensors. In this article, we concentrate on one of the tensor representations, namely, Tensor Train (TT). This representation and an algorithm to compute it were proposed recently in~\cite{tt}. It represents a $d$-dimensional tensor with $2$ matrices and $d$-$2$ 3-dimensional tensors. We call the algorithm TT-decomposition. The algorithm works in $d$-$1$ steps. In each step, one dimension is separated from the remaining tensor. Figure~\ref{fig:tt:ptt} illustrates graphical representation of the algorithm.
+
+\begin{figure*}[htb]
+	\begin{center}
+		\includegraphics[scale=0.035]{./tt-ptt-decompositions.jpg}
+		\caption{TT and PTT decompositions of a $d$-dimensional tensor~\label{fig:tt:ptt}.}
+	\end{center}
+\end{figure*}
+
+\todo[inline]{SK: Explain intuition behind going from Figure~\ref{fig:tt:ptt}(a) to Figure~\ref{fig:tt:ptt}(b).}
+TT-decomposition algorithm is sequential. As mentioned above, we are interested in parallel and communication optimal algorithms. In this article we propose a parallel algorithm to compute TT-representation of a tensor and we call it Parallel Tensor Train (PTT) decomposition throughout the text. Designing communication optimal algorithms to compute TT-representation of a tensor is a part of our future work. Our PTT decomposition algorithm divides the tensor into two subtensors at each level. It exposes parallelism in a binary tree shape. It has maximum parallelism at the last level of the tree. Figure~\ref{fig:tt:ptt} shows the splitting of a $d$-dimensional tensor into substensors by this algorithm. We prove that the ranks of TT-representation computed by this algorithm are bounded by the ranks of unfolding matrices of the tensor. We propose several heuristics to compute approximation of a tensor in TT-format and evaluate them for different tensor sizes. Here are the main contributions of this paper:
+\begin{itemize}
+	\item Propose a parallel algorithm PTT to compute TT-representation of a tensor
+	\item Proof for bounded ranks of TT-representation obtained by PTT algorithm
+	\item Different heuristics to obtain approximation of a tensor in TT-format
+	\item Numerous experiments to assess the effectiveness of our heuristics for several low rank tensors and for tensors arising in molecular chemistry simulations 
 \end{itemize}
+  
+\noindent The rest of the paper is organized as follows.
 
-Multidimensional data are ubiquitous in scientific modeling. Tensors are becoming a popular choice in recent years to represent and manipulate such data. Tensor decomposition and approximation play important roles in several domains, for instance, quantum molecular dynamics, signal processing, numerical linear algebra, scientific simulations, data mining, neuroscience, computer vision, psychometrics, linguistics, chemometrics and more. Tensor decomposition based methods are also being used in drug discovery for the current pandemic~\cite{tensormethod-dd1,tensormethod-dd2}.
 
-\todo[inline]{Complete citation for each domain.}
+
 \section{Related Work}
 \label{sec:relatedWork}
 %0.5 page
 \begin{itemize}
-	\item Different types of tensor decompositions
-	\item Properties and limitation of each type of tensor decomposition (Look at Osoledets's advisor work)
+%%	\item Different types of tensor decompositions
+%%	\item Properties and limitation of each type of tensor decomposition (Look at Osoledets's advisor work)
 	\item Kolda's work
-	\item Ballard's work
+	\item Ballard's work (also include Communication-Efficient Parallel Algorithms forTensor Train Orthogonalization and Rounding)
 	\item Solomonik's work
 	\item Link between DMRG and Tensor-train
 	\item Lin's work ~\cite{lin2019lowrank}
@@ -124,6 +142,13 @@ Multidimensional data are ubiquitous in scientific modeling. Tensors are becomin
 	\item Ongoing work on TAMM (Tensor Algebra for Many body Methods)~\cite{Kowalski2014}
 \end{itemize}
 
+Tensor decomposition was first introduced by \emph{Hitchcock} in 1927~\cite{hitchcock-1927}. This decomposition is now known as canonical decomposition (CANDECOMP). It rediscovered several times, mainly in  psychometrics literature~\cite{redisover-candlecom-1,redisover-candlecom-2}. It can be viewed as high order generalization of singular value decomposition. CANDECOMP represents a $d$-dimensional tensor \tensor{A} with elements $A(i_1,\cdots,i_d)$ as: $A(i_1,\cdots,i_d) = \sum_{\alpha=1}^{r} U_1(i_1,\alpha)  U_2(i_2,\alpha)\cdots U_2(i_d,\alpha)$. The minimum number of $r$ required to express \tensor{A} is called the canonical rank. The matrices [$U_k(i_k,\alpha)$] are called canonical factors. The number of entries in the decoupled representation is $O(nrd)$, much less than the $O(n^d)$ entries in the original tensor. The most fascinating example of this decomposition in Algorithms is Strassen matrix multiplication, which  represents a $2 \times 2$ matrix multiplication as a decomposition of $4\times4\times4$ tensor~\cite{strassen-matrix-multiplication}. This decomposition suffers from several drawbacks. Determining the canonical rank of a tensor is an NP-complete problem~\cite{canonical-rank-npcomplete} and $3$ or higher dimensional tensors can fail to have best approximations for a fixed canonical rank~\cite{tensor-rank-best-low-rank-approximation}.
+
+%%There is not any deterministic procedure to find the best approximation of a tensor for a fixed canonical rank.
+
+\todo[inline]{SK: Not clear, Why Kolda is still using this decomposition? May be practical performance of some known algorithms is good.}
+
+Another popular tensor decomposition is Tucker decomposition. It is named after Ledyard R. Tucker~\cite{tucker-decomposition}. This is also viewed as high order generalization of singular value decomposition. It decomposes a tensor into a set of matrices and a small core tensor. It is represented as: $A(i_1,\cdots,i_d) = \sum_{\alpha_1=1}^{r_1}\cdots\sum_{\alpha_d=1}^{r_d} g_{\alpha_1\cdots\alpha_d}U_1(i_1,\alpha_1)\cdots U_d(i_d, \alpha_d)$. Tucker approximations can be computed by several SVDs for auxiliary matrices. The approximation computed by HOSVD algorithm increases the error atmost by $\sqrt{d}$~\cite{hosvd-quasi-optimality}. For $r_1=r_2\cdots =r_d=r$, tucker approximations store $O(ndr+r^d)$ entries. As the number of entries in this format is exponential in the number of dimension. Thus it is suitable for small dimensions, but not for large dimensions.
 
 \section{Tensor Train Decomposition}
 \label{sec:tt}
