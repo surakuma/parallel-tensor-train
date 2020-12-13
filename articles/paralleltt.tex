@@ -769,9 +769,9 @@ Table~\ref{tab:summary} summarizes all parameters of different approaches for Al
 \label{sec:expResults}
 \subsection{Computation Costs of \otta and PTT-approx}
 \label{sec:computationCost}
-\otta and PTT-approx both algorithms employ SVD $d$-$1$ times for a $d$ dimensional tensor \tensor{A} $\in \mathbb{R}^{n_1 \times n_2 \times \cdots \times n_d}$. Let us assume that the ranks of the TT-representations produced by both algorithms are same, and $r_1=r_2=\cdots=r_{d\text{-}1}=r$. We also assume that $n_1=n_2=\cdots=n_d=n$. Computation cost of the first SVD is dominating for the both algorithms. It is well known that the cost of SVD is highest when the matrix is square. Therefore, the PTT-approx involves $\mathcal{O}\big(\frac{min(n^{\frac{d}{2}}, n^{\frac{d}{2}}) }{min(n,n^{d-1})} \big)$ times more computations than \otta.       
+\otta and PTT-approx both algorithms employ SVD $d$-$1$ times for a $d$ dimensional tensor \tensor{A} $\in \mathbb{R}^{n_1 \times n_2 \times \cdots \times n_d}$. Let us assume that the ranks of the TT-representations produced by both algorithms are same, and $r_1=r_2=\cdots=r_{d\text{-}1}=r$. We also assume that $n_1=n_2=\cdots=n_d=n$. Computation cost of the first SVD is dominating for the both algorithms. It is well known that the cost of SVD is highest when the matrix is square. Therefore, PTT-approx performs $\mathcal{O}\big(\frac{min(n^{\frac{d}{2}}, n^{\frac{d}{2}}) }{min(n,n^{d-1})} \big)$ times more computations than \otta.       
 
-The most accurate low rank approximations rely on truncated SVD, but SVD is expensive. There are good alternatives like strong rank revealing QR (RRQR) or randomized SVD, whose computational complexity is much less compared to SVD. It is now established that those alternatives provide results very close to the ones of the truncated SVD with guaranteed bounds, see e.g.~\cite{demmel19:_improv_analy_and_unified_persp}. Some communication optimal implementations of RRQR exist in the community~\cite{beaupere-tournamentpivoting}, hence we plan to use RRQR instead of SVD for our distributed memory implementation. With RRQR, computation costs of \otta and PTT-approx are $\mathcal{O}(rn^d+r^2n^{d-1} + r^2n^{d-2} +\cdots + r^2n^2)$ and $\mathcal{O}(rn^d + 2r^2n^{\frac{d}{2}} + (2^2r-2r+2)r^2n^{\frac{d}{4}}+\cdots+ (2^{log{}d\text{-}1}r -2r+2)r^2n^{\frac{d}{2^{log{}d\text{-}1}}})$ respectively. The critical path of PTT-approx involves $\mathcal{O}(rn^d + r^2n^{\frac{d}{2}} + r^3n^{\frac{d}{4}} +\cdots+ r^32^{log{}d\text{-}1})$ computations, which is $\mathcal{O}(n^{\frac{d}{2}\text{-1}})$ times less compared to \otta after the first SVD call. A distributed memory implementation of \otta and PTT-approx using RRQR is current underway and out of scope of this paper.
+The most accurate low rank approximations rely on truncated SVD, but SVD is expensive. There are good alternatives like strong rank revealing QR (RRQR) or randomized SVD, whose computational complexity is much less compared to SVD. It is now established that those alternatives provide results very close to the ones of the truncated SVD with guaranteed bounds, see e.g.~\cite{demmel19:_improv_analy_and_unified_persp}. Some communication optimal implementations of RRQR exist in the community~\cite{beaupere-tournamentpivoting}, hence we plan to use RRQR instead of SVD for our distributed memory implementations. With RRQR, computation costs of \otta and PTT-approx are $\mathcal{O}(rn^d+r^2n^{d-1} + r^2n^{d-2} +\cdots + r^2n^2)$ and $\mathcal{O}(rn^d + 2r^2n^{\frac{d}{2}} + (2^2r-2r+2)r^2n^{\frac{d}{4}}+\cdots+ (2^{log{}d\text{-}1}r -2r+2)r^2n^{\frac{d}{2^{log{}d\text{-}1}}})$ respectively. The critical path of PTT-approx involves $\mathcal{O}(rn^d + r^2n^{\frac{d}{2}} + r^3n^{\frac{d}{4}} +\cdots+ r^3n^{\frac{d}{2^{log{}d\text{-}1}}})$ computations. After the first SVD call, the total number of computations in the critical path of PTT-approx is $\mathcal{O}(n^{\frac{d}{2}\text{-1}})$ times less compared to \otta. Distributed memory implementations of \otta and PTT-approx using RRQR are current underway and out of scope of this paper.
 
 \subsection{Experimental Setup}
 We show effectiveness and stability of our methods using Matlab.  
@@ -816,9 +816,12 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}_{1\le j \le N}$ for the fun
 			\multirow{3}{*}{\otta} & compr & 99.996 & 99.999 & 99.994 & 99.991 & 99.986 \\ \cline{2-7} 
 			& ne & 596 & 176 & 992 & 1580 & 2336 \\ \cline{2-7} 
 			& OA & 3.692e-04 & 2.615e-09 & 3.224e-04 & 4.233e-04 & 4.774e-04 \\ \cline{1-7}
-			\multirow{3}{*}{\hfirst} & compr & 99.987 & 99.999 & 99.985 & 99.976 & 99.964 \\ \cline{2-7} 
-			& ne    & 2108 & 176 & 2536 & 4096 & 5960 \\ \cline{2-7} 
-			& OA    & 1.824e-03 & 1.393e-11 & 2.244e-04 & 1.672e-04 & 3.731e-04 \\ \cline{1-7} 
+			\multirow{3}{*}{\hfirst} & compr & 99.974 & 99.999 & 99.979 & 99.964 & 99.950 \\ \cline{2-7} 
+			& ne    & 4344 & 176 & 3444 & 6076 & 8384 \\ \cline{2-7} 
+			& OA    & 7.497e-05 & 1.393e-11 & 2.037e-04 & 6.102e-05 & 2.985e-04 \\ \cline{1-7} 
+%%			\multirow{3}{*}{\hfirst} & compr & 99.987 & 99.999 & 99.985 & 99.976 & 99.964 \\ \cline{2-7} 
+%%			& ne    & 2108 & 176 & 2536 & 4096 & 5960 \\ \cline{2-7} 
+%%			& OA    & 1.824e-03 & 1.393e-11 & 2.244e-04 & 1.672e-04 & 3.731e-04 \\ \cline{1-7} 
 			\multirow{3}{*} {\hsecond} & compr & 99.989 & 99.999 & 99.986 & 99.977 & 99.968 \\ \cline{2-7} 
 			& ne    & 1832 & 176 & 2352 & 3840 & 5404 \\ \cline{2-7} 
 			& OA    & 7.042e-05 & 6.144e-12 & 2.036e-04 & 6.097e-05 & 2.981e-04 \\ \cline{1-7} 
@@ -836,9 +839,12 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}_{1\le j \le N}$ for the fun
 			\multirow{3}{*} {\otta} & compr & 99.993 & 99.999 & 99.987 & 99.981 & 99.971 \\ \cline{2-7} 
 			& ne    & 1212 & 176 & 2240 & 3184 & 4864 \\ \cline{2-7} 
 			& OA    & 2.271e-07 & 2.615e-09 & 1.834e-07 & 4.884e-07 & 4.836e-07 \\ \cline{1-7} 
-			\multirow{3}{*} {\hfirst} & compr & 99.939 & 99.999 & 99.944 & 99.915 & 99.873 \\ \cline{2-7} 
-			& ne    & 10268 & 176 & 9312 & 14224 & 21308 \\ \cline{2-7} 
-			& OA    & 8.959e-07 & 1.393e-11 & 1.404e-07 & 9.258e-08 & 1.249e-07 \\ \cline{1-7} 
+			\multirow{3}{*} {\hfirst} & compr & 99.817 & 99.998 & 99.915 & 99.874 & 99.824 \\ \cline{2-7} 
+			& ne    & 30632 & 344 & 14196 & 21176 & 29524 \\ \cline{2-7} 
+			& OA    & 3.629e-08 & 1.412e-11 & 1.118e-07 & 8.520e-08 & 5.811e-08 \\ \cline{1-7} 
+%%			\multirow{3}{*} {\hfirst} & compr & 99.939 & 99.999 & 99.944 & 99.915 & 99.873 \\ \cline{2-7} 
+%%			& ne    & 10268 & 176 & 9312 & 14224 & 21308 \\ \cline{2-7} 
+%%			& OA    & 8.959e-07 & 1.393e-11 & 1.404e-07 & 9.258e-08 & 1.249e-07 \\ \cline{1-7} 
 			\multirow{3}{*} {\hsecond} & compr & 99.799 & 99.999 & 99.952 & 99.912 & 99.870 \\ \cline{2-7} 
 			& ne    & 33772 & 176 & 8068 & 14824 & 21792 \\ \cline{2-7} 
 			& OA    & 2.820e-08 & 6.144e-12 & 1.118e-07 & 8.518e-08 & 5.664e-08 \\ \cline{1-7} 
@@ -850,7 +856,7 @@ First we consider $N=12$ and $i_j \in \{1, 2, 3, 4\}_{1\le j \le N}$ for the fun
 	\caption{Comparison of different approaches for $12$-dimensional tensors.\label{tab:dim-12}}
 \end{table}
 
-Table~\ref{tab:dim-12-accr-10-3} shows comparable compression ratios for all the approaches. \hsecond achieves slightly better compression ratios than \hfirst. \hthird compression ratios are the best among all our approaches and are also almost equal or better than \otta. We can also observe that $ne$ values of $ICR$ function are more than $ISR$ function and less than $IPR$ function. This indicates that the low-rank approximation of function $(\sum_j i_j^p)^\frac{1}{p}$ requires more entries as $p$ increases. $OA$ values of all the approaches are also within or close to the prescribed accuracy.
+Table~\ref{tab:dim-12-accr-10-3} shows comparable compression ratios for all the approaches. \hsecond achieves slightly better compression ratios than \hfirst. \hthird compression ratios are the best among all our approaches and are also almost equal or better than \otta. We can also observe that $ne$ values of $ICR$ function are more than $ISR$ function and less than $IPR$ function. This indicates that the low-rank approximation of function $(\sum_j i_j^p)^\frac{1}{p}$ requires more entries as $p$ increases. $OA$ values of all the approaches are also within the prescribed accuracy.
 
 Table~\ref{tab:dim-12-accr-10-6} also shows similar behavior. \hthird compression ratios are the best among all our approaches and are similar to \otta. $OA$ values of all the approaches are also within the prescribed limit of $10^{-6}$. 
 
@@ -866,10 +872,13 @@ Next we take $N=6$ and $i_j \in \{1,2 \cdots ,16\}_{1\le j \le N}$ for the funct
 			Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
 			\multirow{3}{*} {\otta} & compr & 99.987 & 99.998 & 99.976 & 99.962 & 99.928 \\ \cline{2-7} 
 			& ne    & 2112 & 320 & 4064 & 6368 & 12032 \\ \cline{2-7} 
-			& OA    & 2.831e-04 & 4.206e-10 & 4.587e-04 & 6.149e-04 & 4.429e-04 \\ \cline{1-7} 
-			\multirow{3}{*} {\hfirst} & compr & 99.953 & 99.998 & 99.948 & 99.920 & 99.867 \\ \cline{2-7} 
-			& ne    & 7904 & 320 & 8736 & 13472 & 22240 \\ \cline{2-7} 
-			& OA    & 7.578e-05 & 3.410e-12 & 2.080e-04 & 2.906e-04 & 2.268e-04 \\ \cline{1-7} 
+			& OA    & 2.831e-04 & 4.206e-10 & 4.587e-04 & 6.149e-04 & 4.429e-04 \\ \cline{1-7}
+			\multirow{3}{*} {\hfirst} & compr & 99.846 & 99.998 & 99.933 & 99.902 & 99.840 \\ \cline{2-7} 
+			& ne    & 25760 & 320 & 11264 & 16384 & 26880 \\ \cline{2-7} 
+			& OA    & 7.304e-05 & 3.410e-12 & 2.033e-04 & 2.882e-04 & 2.221e-04 \\ \cline{1-7}  
+%%			\multirow{3}{*} {\hfirst} & compr & 99.953 & 99.998 & 99.948 & 99.920 & 99.867 \\ \cline{2-7} 
+%%			& ne    & 7904 & 320 & 8736 & 13472 & 22240 \\ \cline{2-7} 
+%%			& OA    & 7.578e-05 & 3.410e-12 & 2.080e-04 & 2.906e-04 & 2.268e-04 \\ \cline{1-7} 
 			\multirow{3}{*} {\hsecond} & compr & 99.973 & 99.998 & 99.952 & 99.928 & 99.879 \\ \cline{2-7} 
 			& ne    & 4512 & 320 & 8096 & 12016 & 20288 \\ \cline{2-7} 
 			& OA    & 7.268e-05 & 3.486e-12 & 2.033e-04 & 2.882e-04 & 2.218e-04 \\ \cline{1-7} 
@@ -887,9 +896,12 @@ Next we take $N=6$ and $i_j \in \{1,2 \cdots ,16\}_{1\le j \le N}$ for the funct
 			\multirow{3}{*} {\otta} & compr & 99.974 & 99.998 & 99.945 & 99.915 & 99.845 \\ \cline{2-7} 
 			& ne    & 4320 & 320 & 9184 & 14336 & 26048 \\ \cline{2-7} 
 			& OA    & 4.156e-07 & 4.206e-10 & 3.990e-07 & 6.983e-07 & 4.536e-07 \\ \cline{1-7} 
-			\multirow{3}{*} {\hfirst} & compr & 99.740 & 99.998 & 99.841 & 99.783 & 99.696 \\ \cline{2-7} 
-			& ne    & 43616 & 320 & 26688 & 36352 & 50976 \\ \cline{2-7} 
-			& OA    & 1.147e-06 & 3.410e-12 & 2.841e-07 & 1.610e-07 & 1.958e-07 \\ \cline{1-7} 
+			\multirow{3}{*} {\hfirst} & compr & 99.644 & 99.998 & 99.703 & 99.570 & 99.442 \\ \cline{2-7} 
+			& ne    & 59696 & 320 & 49808 & 72128 & 93536 \\ \cline{2-7} 
+			& OA    & 3.584e-07 & 3.410e-12 & 2.822e-07 & 1.523e-07 & 1.804e-07 \\ \cline{1-7} 
+%%			\multirow{3}{*} {\hfirst} & compr & 99.740 & 99.998 & 99.841 & 99.783 & 99.696 \\ \cline{2-7} 
+%%			& ne    & 43616 & 320 & 26688 & 36352 & 50976 \\ \cline{2-7} 
+%%			& OA    & 1.147e-06 & 3.410e-12 & 2.841e-07 & 1.610e-07 & 1.958e-07 \\ \cline{1-7} 
 			\multirow{3}{*} {\hsecond} & compr & 99.824 & 99.998 & 99.902 & 99.854 & 99.772 \\ \cline{2-7} 
 			& ne    & 29456 & 320 & 16416 & 24576 & 38208 \\ \cline{2-7} 
 			& OA    & 3.584e-07 & 3.486e-12 & 2.822e-07 & 1.522e-07 & 1.802e-07 \\ \cline{1-7} 
@@ -902,7 +914,9 @@ Next we take $N=6$ and $i_j \in \{1,2 \cdots ,16\}_{1\le j \le N}$ for the funct
 \end{table}
 
 
-Table~\ref{tab:dim-6} displays comparable compression ratios for all the approaches. Again \hthird compression ratios are the best among all our approaches and are same as \otta. $OA$ values of all the approaches are also within or close to the prescribed accuracy. Decay of singular values for $Sin$ function is quite steep, hence performance metrics for both prescribed accuracies depict the same values. $Sin$ (resp. $IPR$) function achieves the best (resp. worst) compression ratios among all the low rank functions of Table~\ref{tab:lowRankFunctions}.
+Table~\ref{tab:dim-6} displays comparable compression ratios for all the approaches. Again \hthird compression ratios are the best among all our approaches and are same as \otta. $OA$ values of all the approaches are also within the prescribed accuracy. Decay of singular values for $Sin$ function is quite steep, hence it 
+%%performance metrics for both prescribed accuracies depict the same values. $Sin$ (resp. $IPR$) function 
+achieves the best compression ratios among all the low rank functions of Table~\ref{tab:lowRankFunctions}.
 
 \begin{figure}[!htb]
 	\begin{center}
@@ -911,7 +925,7 @@ Table~\ref{tab:dim-6} displays comparable compression ratios for all the approac
 	\vspace*{-0.35cm}\caption{\small Ratio to minimal comparison for $12$-dimensional tensors.\label{fig:rtm-12}}
 \end{figure}
 
-Figure~\ref{fig:rtm-12} depicts $r$ values of all the considered approaches for 12-dimensional tensors. All the approaches achieve the same compression ratio for $Sin$ function, hence their $r$ values are $1$. $r_ {\hthird}$ and $r_ {\otta}$ values are almost same and are equal to $1$. For the prescribed accuracy of $10^{-3}$, $r_ {\hfirst}$ values are between $2.5$ to $3.6$ for the other functions. \hsecond compression ratios are slightly better than \hfirst, hence $r_ {\hsecond}$ values are smaller than $r_ {\hfirst}$, but still in the range of $2.25$ to $3.25$. For the prescribed accuracy of $10^{-6}$, $r_ {\hfirst}$ value for $Log$ function is more than $25$. This indicates that \hfirst stores $25\times$ more entries than the best approach. $r_ {\hfirst}$ and $r_ {\hsecond}$ are similar for $ISR$, $ICR$ and $IPR$ functions and are close to $5$. 
+Figure~\ref{fig:rtm-12} depicts $r$ values of all the considered approaches for 12-dimensional tensors. All the approaches achieve the similar compression ratio for $Sin$ function, hence their $r$ values are close to $1$. $r_ {\hthird}$ and $r_ {\otta}$ values are almost same and are equal to $1$. For the prescribed accuracy of $10^{-3}$, $r_ {\hfirst}$ values are between $3$ to $7.5$ for the other functions. \hsecond compression ratios are slightly better than \hfirst, hence $r_ {\hsecond}$ values are smaller than $r_ {\hfirst}$, but still in the range of $2.25$ to $3.25$. For the prescribed accuracy of $10^{-6}$, $r_ {\hfirst}$ and $r_ {\hsecond}$ values for $Log$ function are more than $25$. This indicates that \hfirst and \hsecond store $25\times$ more entries than the best approach. $r_ {\hfirst}$ and $r_ {\hsecond}$ are similar for $ISR$, $ICR$ and $IPR$ functions and are close to $5$. 
 
 \begin{figure}[!htb]
 	\begin{center}
@@ -920,7 +934,7 @@ Figure~\ref{fig:rtm-12} depicts $r$ values of all the considered approaches for 
 	\caption{Ratio to minimal comparison for $6$-dimensional tensors.\label{fig:rtm-6}\vspace*{-0.45cm}}
 \end{figure}
 
-Figure~\ref{fig:rtm-6} shows $r$ values of all the approaches for $6$-dimensional tensors. Similar to the previous plot, $r$ values of all the approaches for $Sin$ function are $1$. $ {\hthird}$ and $ {\otta}$ achieve similar compression, hence their values are equal and close to $1$. For the prescribed accuracy of $10^{-3}$, $r_ {\hfirst}$ value of $Log$ function is more than $3.5$. Therefore \hfirst requires $3\times$ more storage than the best approach for this function. For the other functions, its values are between $1.75$ to $2.25$. $r_ {\hsecond}$ values are slightly better than $r_ {\hfirst}$, and are in the range of $1.75$-$2.25$. For the prescribed accuracy of $10^{-6}$, \hfirst and \hsecond require $10\times$ and $6\times$ more storage than the best approach for $Log$ function. \hfirst and \hsecond achieve close compression ratios for $ISR$, $ICR$ and $IPR$ functions. Hence their $r$ values are also close.
+Figure~\ref{fig:rtm-6} shows $r$ values of all the approaches for $6$-dimensional tensors. $r$ values of all the approaches for $Sin$ function are $1$. $ {\hthird}$ and $ {\otta}$ achieve the same compression ratios, hence their values are equal. For the prescribed accuracy of $10^{-3}$, $r_ {\hfirst}$ value of $Log$ function is more than $11$. Therefore \hfirst requires $11\times$ more storage than the best approach for this function. For the other functions, its values are between $1.75$ to $3$. $r_ {\hsecond}$ values are slightly better than $r_ {\hfirst}$, and are in the range of $1.75$-$2.5$. For the prescribed accuracy of $10^{-6}$, \hfirst and \hsecond require $12\times$ and $6\times$ more storage than the best approach for $Log$ function. \hsecond achieves better compression ratios than \hfirst for $ISR$, $ICR$ and $IPR$ functions, and its $r$ values are less than $2.5$.
 
 %%\medskip
 From the results of this section, we notice that $OA$ values of \hsecond and \hthird are always within the prescribed accuracy. We also observe that \hthird achieves the best compression ratios among all our approaches. 
