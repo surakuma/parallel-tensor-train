@@ -331,7 +331,7 @@ $\qquad\qquad A_k = [A_k(i_1, i_2,\cdots, i_k; i_{k+1},\cdots ,i_d)]$
 
 Let $A(i;j)$ denote the element of $i$th row and $j$th column of a matrix $A$. $i$ and $j$ can be set of indices. For example, row and column indices of element $A_k(i_1, i_2,\cdots, i_k; i_{k+1},\cdots ,i_d)$ are the entries corresponding to $(i_1, i_2,\cdots, i_k)$ and $(i_{k+1},\cdots ,i_d)$ in rows and columns of $A_k$ respectively.
 
-Let $||\tensor{A}||_F$ denote the frobenius norm of a $d$-dimensional tensor \tensor{A} and it is defined as, $||\tensor{A}||_F=$ $\sqrt{\sum_{i_1, i_2, \cdots, i_d}A(i_1,i_2,\cdots, i_d)^2 }$. Similarly, the frobenius norm of a matrix $A$ is defined as, $||A||_F = \sqrt{\sum_{i,j} A(i;j)^2}$. Let $tr(A)$ denote the trace of a square matrix $A$ and it is computed as, $tr(A) = \sum_i A(i;i)$.
+Let $||\tensor{A}||_F$ denote the frobenius norm of a $d$-dimensional tensor \tensor{A} and it is defined as, $||\tensor{A}||_F=$ $\sqrt{\sum_{i_1, i_2, \cdots, i_d}A(i_1,i_2,\cdots, i_d)^2 }$. $||A||_2$ and $||A||_F$ denote the spectral norm and the frobenius norm of a matrix $A$ and they are defined as, $||A||_2 = $ \textit{maximum singular value of} $A$ and $||A||_F = \sqrt{\sum_{i,j} A(i;j)^2}$. Let $tr(A)$ denote the trace of a square matrix $A$ and it is computed as, $tr(A) = \sum_i A(i;i)$.
 
 \subsection{TT-Representation}
 An efficient representation of a tensor with small number of variables provides opportunities to work with high dimensional tensors. TT-representation is a popular way to represent such tensors with few number of variables, as discussed in~\cite{tt}. It represents a $d$-dimensional tensor with $2$ matrices and $d$-$2$ $3$-dimensional tensors. These are called cores of the TT-representation.
@@ -702,10 +702,10 @@ Here we propose different approaches based on how leading singular values of the
 	&\qquad\approx ||E_A||_F^2 + ||U_1E_C||_F^2 + ||E_B\Sigma_\alpha V_1^T||_F^2 \\
 	&\qquad\le \frac{\epsilon^2}{d-1} + ||E_C||_F^2 + ||E_B\Sigma_\alpha||_F^2 \\
 	%\text{From Cauchy} & \text{-Schwarz inequality,}\\
-	&\qquad\le \frac{\epsilon^2}{d-1} + ||E_C||_F^2 + ||E_B||_F^2 ||\Sigma_\alpha||_F^2 \\
-	&\qquad= \frac{\epsilon^2}{d-1} + \delta^2 (d_2-1)+ \delta^2 (d_1-1) tr(\Sigma_\alpha^2)\le \epsilon^2.
+	&\qquad\le \frac{\epsilon^2}{d-1} + ||E_C||_F^2 + ||E_B||_F^2 ||\Sigma_\alpha||_2^2 \\
+	&\qquad= \frac{\epsilon^2}{d-1} + \delta^2 (d_2-1)+ \delta^2 (d_1-1) ||\Sigma_\alpha||_2^2\le \epsilon^2.
 	\end{align*}
-	\noindent After simplifying this expression we obtain, $\delta \le \epsilon \sqrt{\frac{d-2}{(d-1) (d_2 -1 + (d_1-1) tr(\Sigma_\alpha^2))}}$.
+	\noindent After simplifying this expression we obtain, $\delta \le \epsilon \sqrt{\frac{d-2}{(d-1) (d_2 -1 + (d_1-1) ||\Sigma_\alpha||_2^2)}}$.
 	
 %%	\begin{align*}
 %%	\delta &\le \epsilon \sqrt{\frac{d-2}{(d-1) (d_2 -1 + (d_1-1) tr(\Sigma_\alpha^2))}}.
@@ -763,9 +763,20 @@ Table~\ref{tab:summary} summarizes all parameters of different approaches for Al
 		\caption{Summary of all considered approaches\label{tab:summary}.}
 \end{table*}
 
+
+
 \section{Experimental Setup \& Results}
 \label{sec:expResults}
-All our approaches are designed to run in parallel, but to avoid parallel implementation challenges and to show effectiveness of our methods we use Matlab to implement all the approaches. We consider the tensors produced by the low rank functions of Table~\ref{tab:lowRankFunctions} for our evaluation. Such low rank functions arise in numerous applications and we refer to~\cite{lowRankFunctions,lowRankFunction-BM-2005,lowRankFunction-HKT-2005} for more details about these functions.
+\subsection{Computation Costs of \otta and PTT-approx}
+\label{sec:computationCost}
+\otta and PTT-approx both algorithms employ SVD $d$-$1$ times for a $d$ dimensional tensor \tensor{A} $\in \mathbb{R}^{n_1 \times n_2 \times \cdots \times n_d}$. Let us assume that the ranks of the TT-representations produced by both algorithms are same, and $r_1=r_2=\cdots=r_{d\text{-}1}=r$. We also assume that $n_1=n_2=\cdots=n_d=n$. Computation cost of the first SVD is dominating for the both algorithms. It is well known that the cost of SVD is highest when the matrix is square. Therefore, the PTT-approx involves $\mathcal{O}\big(\frac{min(n^{\frac{d}{2}}, n^{\frac{d}{2}}) }{min(n,n^{d-1})} \big)$ times more computations than \otta.       
+
+The most accurate low rank approximations rely on truncated SVD, but SVD is expensive. There are good alternatives like strong rank revealing QR (RRQR) or randomized SVD, whose computational complexity is much less compared to SVD. It is now established that those alternatives provide results very close to the ones of the truncated SVD with guaranteed bounds, see e.g.~\cite{demmel19:_improv_analy_and_unified_persp}. Some communication optimal implementations of RRQR exist in the community~\cite{beaupere-tournamentpivoting}, hence we plan to use RRQR instead of SVD for our distributed memory implementation. With RRQR, computation costs of \otta and PTT-approx are $\mathcal{O}(rn^d+r^2n^{d-1} + r^2n^{d-2} +\cdots + r^2n^2)$ and $\mathcal{O}(rn^d + 2r^2n^{\frac{d}{2}} + (2^2r-2r+2)r^2n^{\frac{d}{4}}+\cdots+ (2^{log{}d\text{-}1}r -2r+2)r^2n^{\frac{d}{2^{log{}d\text{-}1}}})$ respectively. The critical path of PTT-approx involves $\mathcal{O}(rn^d + r^2n^{\frac{d}{2}} + r^3n^{\frac{d}{4}} +\cdots+ r^32^{log{}d\text{-}1})$ computations, which is $\mathcal{O}(n^{\frac{d}{2}\text{-1}})$ times less compared to \otta after the first SVD call. A distributed memory implementation of \otta and PTT-approx using RRQR is current underway and out of scope of this paper.
+
+\subsection{Experimental Setup}
+We show effectiveness and stability of our methods using Matlab.  
+%%All our approaches are designed to run in parallel, but to avoid parallel implementation challenges and to show effectiveness of our methods we use Matlab to implement all the approaches.
+We consider the tensors produced by the low rank functions of Table~\ref{tab:lowRankFunctions} for our evaluation. Such low rank functions arise in numerous applications and we refer to~\cite{lowRankFunctions,lowRankFunction-BM-2005,lowRankFunction-HKT-2005} for more details about these functions.
 
 \begin{table}[htb]
 	\centering
@@ -974,7 +985,7 @@ Table~\ref{tab:dim-4-mol-chem} shows that performance metrics of both approaches
 
 \section{Conclusion}
 \label{sec:conclusion}
-We considered the problem of designing parallel decomposition and approximation algorithms for tensors. Tenor train is a popular way to represent tensors in a concise way. It is based on low dimensional structure of the tensors. We proposed a parallel algorithm to compute tensor train representation of a tensor. We proved that the ranks of tensor train representation obtained by our algorithm are bounded by the ranks of unfolding matrices of the tensor. We also proposed several approaches to compute approximation of a tensor in tensor train representation. Our approaches are based on hierarchical partitioning of dimensions of a tensor in a balanced tree shape and how leading singular values are transmitted from the parent to its children. Our results show that the approach which transmits leading singular values to both of its children performs better in practice. A distributed memory implementation of our approaches is currently underway.
+We considered the problem of designing parallel decomposition and approximation algorithms for tensors. Tensor train is a popular way to represent tensors in a concise way. It is based on low dimensional structure of the tensors. We proposed a parallel algorithm to compute tensor train representation of a tensor. We proved that the ranks of tensor train representation obtained by our algorithm are bounded by the ranks of unfolding matrices of the tensor. We also proposed several approaches to compute approximation of a tensor in tensor train representation. Our approaches are based on hierarchical partitioning of dimensions of a tensor in a balanced tree shape and how leading singular values are transmitted from the parent to its children. Our results show that the approach which transmits leading singular values to both of its children performs better in practice. A distributed memory implementation of our approaches is currently underway.
 
 In future, we plan to extend our approach to parallelize algorithms like DMRG. We also plan to work on proving guarantees for rank-$r_k$ approximation of our algorithms.
 
