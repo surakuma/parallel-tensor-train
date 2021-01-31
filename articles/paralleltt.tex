@@ -78,7 +78,8 @@
 
 \begin{document}
 %
-\title{Parallel Algorithms for Tensor-Train Decomposition}
+%%\title{Parallel Algorithms for Tensor-Train Decomposition}
+\title{Parallel Tensor Train through Hierarchical Decomposition}
 %%%%\title{Contribution Title\thanks{Supported by organization x.}}
 %%%%%
 %%%%%\titlerunning{Abbreviated paper title}
@@ -96,7 +97,9 @@ Suraj Kumar\inst{1}}
 %%%%% First names are abbreviated in the running head.
 %%%%% If there are more than two authors, 'et al.' is used.
 %%%%%
-\institute{Alpines, Inria Paris, France\\
+\institute{Alpines, Inria Paris,\\
+	 Sorbonne Université, Université de Paris, CNRS,\\
+	 Laboratoire Jacques-Louis Lions, Paris, France	
 Email:\email{\{laura.grigori,suraj.kumar\}@inria.fr}}
 %%%%%
 \maketitle       % typeset the header of the contribution
@@ -105,7 +108,7 @@ Email:\email{\{laura.grigori,suraj.kumar\}@inria.fr}}
 We consider the problem of developing parallel decomposition and approximation 
 algorithms for high dimensional tensors. We focus on a tensor representation 
 named Tensor Train (TT). It stores a $d$-dimensional tensor in 
-$\mathcal{O}(nrd$), much less than the $\mathcal{O}(n^d)$ entries in the 
+$\mathcal{O}(ndr^2$), much less than the $\mathcal{O}(n^d)$ entries in the 
 original tensor, where $r$ is usually a very small number and depends on the 
 application. Sequential algorithms to compute TT decomposition and 
 TT approximation of a tensor have been proposed in the literature. Here we 
@@ -135,6 +138,9 @@ cases, even better than that.
 \label{sec:introduction}
 % 1-page
 Multidimensional data is ubiquitous in scientific computing and data analysis. Tensors are becoming a popular choice in recent years to represent and manipulate such data. Tensor decomposition and approximation play important roles in several domains, for instance, quantum molecular dynamics, signal processing, data mining, neurosciences, computer vision, psychometrics, chemometrics and more. Tensor decomposition based methods are also being used in drug discovery for the current pandemic~\cite{tensormethod-dd2}. We point the reader to~\cite{tensor-basics} for a nice survey on tensor decompositions and applications.
+
+Historically there has been a great emphasis on minimizing the complexity of computations. With the advent of multicores, the focus has shifted towards developing parallel algorithms. In recent years, the number of computational cores has increased dramatically and communication becomes bottleneck for an application. Thus the focus is now moving towards developing parallel and communication optimal algorithms~\cite{qr-lu-2012,Ballard-mcnla-2011}.
+
 
 Historically there has been a great emphasis on minimizing the complexity of computations. With the advent of multicores, the focus has shifted towards developing parallel algorithms. In recent years, the number of computational cores has increased dramatically and communication becomes bottleneck for an application. Thus the focus is now moving towards developing parallel and communication optimal algorithms~\cite{qr-lu-2012,Ballard-mcnla-2011}.
 
@@ -1006,7 +1012,7 @@ In future, we plan to extend our approach to parallelize algorithms like DMRG. W
 %%\balance
 
 \section*{Acknowledgment}
-\noindent This project has received funding from the European Research Council (ERC) under the European Unions Horizon 2020 research and innovation program (grant agreement No 810367).
+\noindent This project has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (grant agreement No 810367).
 
 %
 % ---- Bibliography ----
