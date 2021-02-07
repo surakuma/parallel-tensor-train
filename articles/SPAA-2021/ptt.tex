@@ -1265,7 +1265,7 @@ We aim for approximations with error not far away from $10^{-3}$. Table~\ref{tab
 
 \begin{table}[htb]
 	\begin{center}
-		\begin{tabular}{|c|c|c|c|c|c|c|}
+		{\small\begin{tabular}{|c|c|c|c|c|c|c|}
 			\hline
 			Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
 			\multirow{3}{*} {\otta} 
@@ -1276,7 +1276,7 @@ We aim for approximations with error not far away from $10^{-3}$. Table~\ref{tab
 			& compr    & 99.996     & 99.999     & 99.994     & 99.991     & 99.986 \\ \cline{2-7}
 			& ne       & 596        & 176        & 992        & 1528       & 2336 \\ \cline{2-7}
 			& OA       & 3.692e-04 & 1.252e-11 & 3.223e-04 & 5.042e-04 & 4.774e-04 \\ \cline{1-7} 
-		\end{tabular}
+		\end{tabular}}
 		\caption{Prescribed accuracy = $10^{-3}$.~\label{tab:12-dim-accur-e-3}}
 	\end{center}
 \end{table}
@@ -1284,7 +1284,7 @@ We aim for approximations with error not far away from $10^{-3}$. Table~\ref{tab
 
 \begin{table}[htb]
 	\begin{center}
-		\begin{tabular}{|c|c|c|}
+	{\small\begin{tabular}{|c|c|c|}
 			\hline
 			&\otta ranks & \hthird ranks\\
 			& ($r_0,r_1,\cdots, r_{12}$) & ($r_0,r_1,\cdots, r_{12}$)\\ \hline
@@ -1293,7 +1293,7 @@ We aim for approximations with error not far away from $10^{-3}$. Table~\ref{tab
 			$ISR$ & ($1, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 1$) & ($1, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 1$)\\ \hline
 			$ICR$ & ($1, 4, 6, 6, 6, 7, 7, 7, 7, 6, 6, 4, 1$) & ($1, 4, 6, 6, 6, 7, 7, 7, 6, 6, 6, 4, 1$)\\ \hline
 			$IPR$ & ($1, 4, 8, 8, 8, 8, 8, 8, 8, 8, 8, 4, 1$) & ($1, 4, 8, 8, 8, 8, 8, 8, 8, 8, 8, 4, 1$)\\ \hline			
-		\end{tabular}
+		\end{tabular}}
 		\caption{Tensor Train ranks for prescribed accuracy of $10^{-3}$.~\label{tab:12-dim-ranks-e-3}}
 	\end{center}
 \end{table}
@@ -1308,7 +1308,7 @@ Tables~\ref{tab:svd-qrcp+svd-seq-e-03} and ~\ref{tab:svd-qrcp+svd-parallel-e-03}
 
 \begin{table}[htb]
 	\begin{center}
-		\begin{tabular}{|c|c|c|c|c|c|c|}
+	{\small\begin{tabular}{|c|c|c|c|c|c|c|}
 			\hline
 			Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
 			%%		\multirow{4}{*} {SVD}
@@ -1341,7 +1341,7 @@ Tables~\ref{tab:svd-qrcp+svd-seq-e-03} and ~\ref{tab:svd-qrcp+svd-parallel-e-03}
 			& compr    & 99.994    & 99.998    & 99.992    & 99.986    & 99.983 \\ \cline{2-7}
 			& ne       & 992       & 384       & 1376      & 2336      & 2912 \\ \cline{2-7}
 			& OA       & 1.384e-05 & 1.428e-10 & 1.515e-04 & 5.287e-05 & 8.425e-04 \\ \cline{1-7}
-		\end{tabular}
+		\end{tabular}}
 		\caption{Comparison of SVD and QRCP+SVD for fixed ranks with \otta tree.\label{tab:svd-qrcp+svd-seq-e-03}}
 	\end{center}
 \end{table}
@@ -1349,7 +1349,7 @@ Tables~\ref{tab:svd-qrcp+svd-seq-e-03} and ~\ref{tab:svd-qrcp+svd-parallel-e-03}
 
 \begin{table}[htb]
 	\begin{center}
-		\begin{tabular}{|c|c|c|c|c|c|c|}
+	{\small\begin{tabular}{|c|c|c|c|c|c|c|}
 			%%		\toprule
 			\hline
 			Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
@@ -1383,7 +1383,7 @@ Tables~\ref{tab:svd-qrcp+svd-seq-e-03} and ~\ref{tab:svd-qrcp+svd-parallel-e-03}
 			& compr    & 99.994    & 99.998    & 99.992     & 99.986     & 99.983 \\ \cline{2-7}
 			& ne       & 992       & 384       & 1376       & 2336       & 2912 \\ \cline{2-7}
 			& OA       & 1.016e-05 & 6.732e-12 & 7.719e-05  & 3.490e-05  & 6.393e-04 \\ \cline{1-7}
-		\end{tabular}
+		\end{tabular}}
 		\caption{Comparison of SVD and QRCP+SVD for fixed ranks with \hthird tree.~\label{tab:svd-qrcp+svd-parallel-e-03}}
 	\end{center}
 \end{table}
@@ -1397,7 +1397,7 @@ Similar to the previous subsection, here we aim for approximations with error no
 
 \begin{table}[htb]
 	\begin{center}
-		\begin{tabular}{|c|c|c|c|c|c|c|}
+		{\small\begin{tabular}{|c|c|c|c|c|c|c|}
 			%%		\toprule
 			\hline
 			Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
@@ -1407,14 +1407,14 @@ Similar to the previous subsection, here we aim for approximations with error no
 			\multirow{3}{*} {\hthird} & compr & 99.993 & 99.999 & 99.987 & 99.981 & 99.970 \\ \cline{2-7} 
 			& ne    & 1212 & 176 & 2240 & 3184 & 4964 \\ \cline{2-7} 
 			& OA    & 2.265e-07 & 1.252e-11 & 1.834e-07 & 4.885e-07 & 3.999e-07 \\ \cline{1-7} 
-		\end{tabular}
+		\end{tabular}}
 		\caption{Prescribed accuracy = $10^{-6}$.\label{tab:12-dim-accur-e-6}}
 	\end{center}
 \end{table}
 
 \begin{table}[htb]
 	\begin{center}
-		\begin{tabular}{|c|c|c|}
+		{\scriptsize\begin{tabular}{|c|c|c|}
 			\hline
 			&\otta ranks & \hthird ranks\\
 			& ($r_0,r_1,\cdots, r_{12}$) & ($r_0,r_1,\cdots, r_{12}$)\\ \hline
@@ -1423,16 +1423,16 @@ Similar to the previous subsection, here we aim for approximations with error no
 			$ISR$ &($1, 4, 7, 8, 8, 8, 8, 8, 8, 8, 7, 4, 1$)&($1, 4, 7, 8, 8, 8, 8, 8, 8, 8, 7, 4, 1$)\\ \hline
 			$ICR$ &($1, 4, 8, 9, 10, 10, 10, 10, 10, 9, 8, 4, 1$)&($1, 4, 8, 9, 10, 10, 10, 10, 10, 9, 8, 4, 1$)\\ \hline
 			$IPR$ &($1, 4, 10, 12, 12, 12, 13, 12, 12, 12, 10, 4, 1$)&($1, 4, 10, 12, 12, 13, 13, 12, 12, 12, 10, 4, 1$)\\ \hline
-		\end{tabular}
+		\end{tabular}}
 		\caption{Tensor Train ranks for prescribed accuracy of $10^{-6}$.\label{tab:12-dim-ranks-e-6}}
 	\end{center}
 \end{table}
 
 
 %%\begin{tabular}{@{}c@{}}SVD \\ Max Rank=\end{tabular}
-\begin{table*}[htb]
+\begin{table}[htb]
 	\begin{center}
-		\begin{tabular}{|c|c|c|c|c|c|c|}
+	{\footnotesize\begin{tabular}{|c|c|c|c|c|c|c|}
 			%%		\toprule
 			\hline
 			Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
@@ -1466,15 +1466,15 @@ Similar to the previous subsection, here we aim for approximations with error no
 			& compr    & 99.989    & 99.998    & 99.983    & 99.975    & 99.960 \\ \cline{2-7}
 			& ne       & 1824      & 384       & 2912      & 4256      & 6752 \\ \cline{2-7}
 			& OA       & 1.167e-08 & 1.428e-10 & 4.331e-08 & 4.926e-08 & 8.778e-08 \\ \cline{1-7}
-		\end{tabular}
+		\end{tabular}}
 		\caption{Comparison of SVD and QRCP+SVD for fixed ranks with \otta tree.~\label{tab:svd-qrcp+svd-seq-e-06}}
 	\end{center}
-\end{table*}
+\end{table}
 
 
-\begin{table*}[htb]
+\begin{table}[htb]
 	\begin{center}
-		\begin{tabular}{|c|c|c|c|c|c|c|}
+	{\footnotesize\begin{tabular}{|c|c|c|c|c|c|c|}
 			%%		\toprule
 			\hline
 			Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
@@ -1508,10 +1508,10 @@ Similar to the previous subsection, here we aim for approximations with error no
 			& compr    & 99.989    & 99.998    & 99.983    & 99.975    & 99.960 \\ \cline{2-7}
 			& ne       & 1824      & 384       & 2912      & 4256      & 6752 \\ \cline{2-7}
 			& OA       & 6.620e-09 & 6.732e-12 & 1.910e-08 & 2.732e-08 & 3.017e-08 \\ \cline{1-7} 
-		\end{tabular}
+		\end{tabular}}
 		\caption{Comparison of SVD and QRCP+SVD for fixed ranks with \hthird tree.~\label{tab:svd-qrcp+svd-parallel-e-06}}
 	\end{center}
-\end{table*}
+\end{table}
 Tables~\ref{tab:svd-qrcp+svd-seq-e-03}, ~\ref{tab:svd-qrcp+svd-parallel-e-03}, \ref{tab:svd-qrcp+svd-seq-e-06}, and \ref{tab:svd-qrcp+svd-parallel-e-06} exhibit that acuuracies of the approximations obtained by QRCP+SVD approach are comparable with the SVD approach for \otta as well as \hthird methods. 
 \end{document}
 \endinput
