@@ -1393,7 +1393,7 @@ Tables~\ref{tab:svd-qrcp+svd-seq-e-03} and ~\ref{tab:svd-qrcp+svd-parallel-e-03}
 
 
 \subsection{Approximation error less than or  close to $10^{-6}$}
-Similar to the previous subsection, here we aim for approximations with error not far away from $10^{-6}$ and show the results in  Tables~\ref{tab:12-dim-accur-e-6} , \ref{tab:12-dim-ranks-e-6}, \ref{tab:svd-qrcp+svd-seq-e-06}, and \ref{tab:svd-qrcp+svd-parallel-e-06}. 
+Similar to the previous subsection, here we aim for approximations with error not far away from $10^{-6}$ and show the results in  Tables~\ref{tab:12-dim-accur-e-6}, \ref{tab:12-dim-ranks-e-6}, \ref{tab:svd-qrcp+svd-seq-e-06}, and \ref{tab:svd-qrcp+svd-parallel-e-06}. 
 
 \begin{table}[htb]
 	\begin{center}
@@ -1430,7 +1430,7 @@ Similar to the previous subsection, here we aim for approximations with error no
 
 
 %%\begin{tabular}{@{}c@{}}SVD \\ Max Rank=\end{tabular}
-\begin{table}[htb]
+\begin{table*}[htb]
 	\begin{center}
 	{\footnotesize\begin{tabular}{|c|c|c|c|c|c|c|}
 			%%		\toprule
@@ -1469,10 +1469,10 @@ Similar to the previous subsection, here we aim for approximations with error no
 		\end{tabular}}
 		\caption{Comparison of SVD and QRCP+SVD for fixed ranks with \otta tree.~\label{tab:svd-qrcp+svd-seq-e-06}}
 	\end{center}
-\end{table}
+\end{table*}
 
 
-\begin{table}[htb]
+\begin{table*}[htb]
 	\begin{center}
 	{\footnotesize\begin{tabular}{|c|c|c|c|c|c|c|}
 			%%		\toprule
@@ -1511,7 +1511,8 @@ Similar to the previous subsection, here we aim for approximations with error no
 		\end{tabular}}
 		\caption{Comparison of SVD and QRCP+SVD for fixed ranks with \hthird tree.~\label{tab:svd-qrcp+svd-parallel-e-06}}
 	\end{center}
-\end{table}
+\end{table*}
+%%\balance
 Tables~\ref{tab:svd-qrcp+svd-seq-e-03}, ~\ref{tab:svd-qrcp+svd-parallel-e-03}, \ref{tab:svd-qrcp+svd-seq-e-06}, and \ref{tab:svd-qrcp+svd-parallel-e-06} exhibit that acuuracies of the approximations obtained by QRCP+SVD approach are comparable with the SVD approach for \otta as well as \hthird methods. 
 \end{document}
 \endinput
