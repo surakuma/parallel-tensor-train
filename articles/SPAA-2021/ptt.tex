@@ -890,7 +890,9 @@ Here we propose different approaches based on how leading singular values of the
 	&\qquad\le \frac{\epsilon^2}{d-1} + ||E_C||_F^2 + ||E_B||_F^2 ||\Sigma_\alpha||_2^2 \\
 	&\qquad= \frac{\epsilon^2}{d-1} + \delta^2 (d_2-1)+ \delta^2 (d_1-1) ||\Sigma_\alpha||_2^2\le \epsilon^2.
 	\end{align*}
-	\noindent After simplifying this expression we obtain, $\delta \le \epsilon \sqrt{\frac{d-2}{(d-1) (d_2 -1 + (d_1-1) ||\Sigma_\alpha||_2^2)}}$.
+	\noindent After simplifying this expression we obtain,
+	
+	 $\qquad\qquad\qquad\delta \le \epsilon \sqrt{\frac{d-2}{(d-1) (d_2 -1 + (d_1-1) ||\Sigma_\alpha||_2^2)}}$.
 	
 	%%	\begin{align*}
 	%%	\delta &\le \epsilon \sqrt{\frac{d-2}{(d-1) (d_2 -1 + (d_1-1) tr(\Sigma_\alpha^2))}}.
@@ -960,6 +962,10 @@ The most accurate low rank approximations rely on truncated SVD, but SVD is expe
 
 
 With applying QRCP before SVD, computation costs of \otta and PTT-approx are $\mathcal{O}(rn^d + r^2 (n^{d\text{-}1} + n^{d\text{-}2} + \cdots  + n^2) + r^2 (n^{d\text{-}1} + n^{d\text{-}2} + \cdots + n))$ and $\mathcal{O}(rn^d + 2r^2(n^\frac{d}{2}+\cdots+n^2) + r^3 ((2^{3\text{-}1}\text{-}2)n^\frac{d}{4} + \cdots+ (2^{lg(d)\text{-}1}\text{-}2)n^2) + r^3((2^{2\text{-}1}\text{-}1)n^\frac{d}{4}+\cdots+(2^{lg(d)\text{-}1}\text{-}1)n) + r^2 (n^\frac{d}{2} +\cdots+n))$ respectively. For simplicity, we assume that $d$ is perfect power of $2$. Computation cost of the first node for both \otta and PTT-approx algorithms are asymptotically same and equal to $\mathcal{O}(rn^d)$. After the first node, total number of computations in PTT-approx is $\mathcal{O}(n^{\frac{d}{2}\text{-}1})$ times less compared to \otta. Critical path length of PTT-approx also has  $\mathcal{O}(n^{\frac{d}{2}\text{-}1})$ times less computations than \otta after the first node. 
+
+
+We consider that the input $d$-dimensional tensor is distributed cyclically over a grid of $P = P_1 \times P_2\times\cdots P_d$ processors. Each processor has a small subtensor of size $\frac{n}{P_1}\times \frac{n}{P_2} \times \cdots \frac{n}{P_d}$. We assume $P_1=P_2=\cdots P_d$. Order of rows and columns of the subtensor on each processor is different from the order of rows and columns in the original unfolding matrices of the tensor. In order to obtain correct results for each computation in PTT tree, the final results must be multiplied with the appropriate row and column permutation matrices. We can notice that at the $k$-th level, total number of computations in the tree is $2^{k-1}$. We consider that only $\frac{P}{2^{k-1}}$ number of processors participate to perform a computation. Now we discuss the maximum number of messages sent or received by any processor in QRCP and SVD for each computation. Total number of messages sent by any processor to determine the $r$-dominating column of the global unfolding matrix is $\mathcal{O}(\log_2^2 \frac{P}{2^{k-1}})$~\cite{beaupere-tournamentpivoting}. Total number of messages sent by any processor to perform QRCP (or RRQR) in parallel is $\mathcal{O}(\sqrt{rP}\frac{P}{2^{k-1}} \log_2^4\frac{P}{2^{k-1}})$~\cite{carrqr-2015}. By using ScaLAPACK to perform SVD of the selected right triangular matrix, each processor needs to send atmax $\mathcal{O}(r)$ number of messages~\cite{Ballard-mcnla-2011}. Hence, the total number of messages sent by any processor for a computation at the $k$-th level in the PTT tree is $\mathcal{O}(\log_2^2 \frac{P}{2^{k-1}} + \sqrt{rP\frac{P}{2^{k-1}}} \log_2^4\frac{P}{2^{k-1}} + r)$
+
 
 In this paper, we show effectiveness and stability of our algorithms only with SVD. Accuracy results with applying QRCP before SVD are presented in Appendix~\ref{app:qrcp+svd}. Distributed memory implementations of \otta and PTT-approx are currently underway and out of scope of this paper.
 
