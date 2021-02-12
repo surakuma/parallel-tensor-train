@@ -239,7 +239,7 @@ propose a parallel algorithm to compute approximation of a tensor in
 TT-representation. Our algorithm relies on a hierarchical partitioning of the 
 dimensions of the tensor in a balanced binary tree shape and transmission 
 of leading singular values of associated unfolding matrix from the parent to 
-its children. Our algorithm transmits only $\mathcal{O}(\log^2 P\log d)$ number of messages along the critical path for a $d$-dimensional tensor on $P$ processors. We consider several approaches on the basis of 
+its children. We consider several approaches on the basis of 
 how leading singular 
 values are transmitted in the tree. We present an in-depth experimental 
 analysis of our approaches for different low rank tensors and also assess them 
@@ -248,7 +248,7 @@ obtained from quantum chemistry simulations. Our results show that the approach
 which transmits leading singular values to both of its children performs better 
 in practice. Compression ratios and accuracies of the approximations obtained 
 by our approaches are comparable with the sequential algorithm and, in some 
-cases, even better than that. 
+cases, even better than that. We also show that our algorithms transmit only $\mathcal{O}(\log^2 P\log d)$ number of messages along the critical path for a $d$-dimensional tensor on $P$ processors. The lower bound on the number of  messages for any algorithm which exchanges data on $P$ processors is $\Omega(\log_2 P)$, and our algorithm achieves this bound, modulo polylog factor.
 \end{abstract}
 
 %%
@@ -305,7 +305,8 @@ cases, even better than that.
 %% information and builds the first part of the formatted document.
 \settopmatter{printfolios=true}
 \maketitle
-\clearpage
+%%\clearpage
+\newpage
 
 %%\setcounter{page}{1}
 %%\pagenumbering{roman}
@@ -318,7 +319,7 @@ Multidimensional data is ubiquitous in scientific computing and data analysis. T
 Historically there has been a great emphasis on minimizing the complexity of computations. With the advent of multicores, the focus has shifted towards developing parallel algorithms. In recent years, the number of computational cores has increased dramatically and communication becomes bottleneck for an application. Thus the focus is now moving towards developing parallel and communication optimal algorithms~\cite{qr-lu-2012,Ballard-mcnla-2011}.
 
 
-Historically there has been a great emphasis on minimizing the complexity of computations. With the advent of multicores, the focus has shifted towards developing parallel algorithms. In recent years, the number of computational cores has increased dramatically and communication becomes bottleneck for an application. Thus the focus is now moving towards developing parallel and communication optimal algorithms~\cite{qr-lu-2012,Ballard-mcnla-2011}.
+%%Historically there has been a great emphasis on minimizing the complexity of computations. With the advent of multicores, the focus has shifted towards developing parallel algorithms. In recent years, the number of computational cores has increased dramatically and communication becomes bottleneck for an application. Thus the focus is now moving towards developing parallel and communication optimal algorithms~\cite{qr-lu-2012,Ballard-mcnla-2011}.
 
 Recent advances in high performance architectures make us enable to find efficient solutions for some of the most challenging scientific problems. Solving problems with large tensors on such architectures is still tough due to their large computational effort and memory requirements (amount of memory and computations grow exponentially in number of dimensions). For example, a molecular simulation involving just $100$ spatial orbitals requires one to manipulate a $100$-dimensional tensor with $4^{100}$ elements. These problems can not be tackled directly. It is therefore necessary to exploit patterns of the data. Finding low dimensional structure of high dimensional data is a powerful approach in this context. Several tensor representations such as CP, Tucker, Tensor-Train are based on low dimensional structure of the tensors. In this article, we concentrate on one of the tensor representations, namely, Tensor Train (TT). This representation and an algorithm to compute it were proposed in~\cite{tt}. It represents a $d$-dimensional tensor with $2$ matrices and $d$-$2$ 3-dimensional tensors. We call the algorithm TT-decomposition. The algorithm works in $d$-$1$ steps. In each step, one dimension is separated from the remaining tensor. Figure~\ref{fig:tt:workingtree} shows the separation of dimensions of a $d$-dimensional tensor by this algorithm.
 \begin{figure*}[!t]
@@ -455,7 +456,7 @@ Recent advances in high performance architectures make us enable to find efficie
 		\caption{Splitting of dimensions in TT and PTT decompositions for a $d$-dimensional tensor. Each node shows a set of dimensions associated with it.~\label{fig:tt:ptt}}
 	\end{center}
 \end{figure*} 
-Even if each step of the TT-decomposition can be parallelized, the separation of each dimension from the remaining ones is an intrinsically sequential process. This is reflected by the depth of the tree which is equal to one less than the number of dimensions of the tensor. From this figure, we also observe that we could achieve maximum parallelism if the tree is structured such that the width is full at each level. Based on this observation, we propose a parallel algorithm to compute TT-representation of a tensor and we call it Parallel Tensor Train (PTT) decomposition throughout the text. Designing communication optimal algorithms to compute TT-representation of a tensor is a part of our future work. Our PTT decomposition algorithm divides the tensor into two subtensors at each level. It exposes parallelism in a balanced binary tree shape and has maximum parallelism at the last level of the tree. Figure~\ref{fig:ptt:workingtree} shows the splitting of dimensions by this algorithm. We prove that the ranks of TT-representation computed by this algorithm are bounded by the ranks of unfolding matrices of the tensor. We also propose a parallel algorithm to compute approximation of a tensor in TT-representation. Our algorithm relies on a hierarchical partitioning of the dimensions of the tensor in a balanced binary tree shape and transmission of leading singular values of associated unfolding matrix from the parent to its children. We consider several approaches based on how leading singular values are transmitted in the tree and  evaluate them for different tensor sizes. Our results show that the approach which transmits leading singular values to both of its children performs better in practice.
+Even if each step of the TT-decomposition can be parallelized, the separation of each dimension from the remaining ones is an intrinsically sequential process. This is reflected by the depth of the tree which is equal to one less than the number of dimensions of the tensor. From this figure, we also observe that we could achieve maximum parallelism if the tree is structured such that the width is full at each level. Based on this observation, we propose a parallel algorithm to compute TT-representation of a tensor and we call it Parallel Tensor Train (PTT) decomposition throughout the text. Designing communication optimal algorithms to compute TT-representation of a tensor is a part of our future work. Our PTT decomposition algorithm divides the tensor into two subtensors at each level. It exposes parallelism in a balanced binary tree shape and has maximum parallelism at the last level of the tree. Figure~\ref{fig:ptt:workingtree} shows the splitting of dimensions by this algorithm. We prove that the ranks of TT-representation computed by this algorithm are bounded by the ranks of unfolding matrices of the tensor. We also propose a parallel algorithm to compute approximation of a tensor in TT-representation. Our algorithm relies on a hierarchical partitioning of the dimensions of the tensor in a balanced binary tree shape and transmission of leading singular values of associated unfolding matrix from the parent to its children. We consider several approaches based on how leading singular values are transmitted in the tree and  evaluate them for different tensor sizes. Our results show that the approach which transmits leading singular values to both of its children performs better in practice. We also show that our algorithms transmit only $\mathcal{O}(\log^2 P\log d)$ number of messages along the critical path for a $d$-dimensional tensor on $P$ processors.
 
 %%different tensor sizes. The main contributions of this paper are:
 %%\begin{itemize}
@@ -953,9 +954,11 @@ Table~\ref{tab:summary} summarizes all parameters of different approaches for Al
 
 
 
-\subsection{Computation Costs of \otta and PTT-approx}
+\subsection{Costs of \otta and PTT-approx}
 \label{sec:computationCost}
-Let us assume that the ranks of the TT-representations produced by both algorithms, \otta and PTT-approx, for a $d$ dimensional tensor \tensor{A} $\in \mathbb{R}^{n_1 \times n_2 \times \cdots \times n_d}$ are same, and $r_1=r_2=\cdots=r_{d\text{-}1}=r$. We also assume that $n_1=n_2=\cdots=n_d=n$. Computation cost of the first SVD is dominating for both algorithms. It is well known that the cost of SVD is highest when the matrix is square. Therefore, PTT-approx performs $\mathcal{O}\big(\frac{\min(n^{\frac{d}{2}}, n^{\frac{d}{2}}) }{\min(n,n^{d\text{-}1})} \big)$ times more computations than \otta.    
+Let us assume that the ranks of the TT-representations produced by both algorithms, \otta and PTT-approx, for a $d$ dimensional tensor \tensor{A} $\in \mathbb{R}^{n_1 \times n_2 \times \cdots \times n_d}$ are same, and $r_1=r_2=\cdots=r_{d\text{-}1}=r$. We also assume that $n_1=n_2=\cdots=n_d=n$. For simplicity, we assume that $d$ is perfect power of $2$. 
+
+%%Computation cost of the first SVD is dominating for both algorithms. It is well known that the cost of SVD is highest when the matrix is square. Therefore, PTT-approx performs $\mathcal{O}\big(\frac{\min(n^{\frac{d}{2}}, n^{\frac{d}{2}}) }{\min(n,n^{d\text{-}1})} \big)$ times more computations than \otta.    
 
 The most accurate low rank approximations rely on truncated SVD, but SVD is expensive. There are good alternatives like QR factorization with column pivoting (QRCP) or randomized SVD, whose computational complexity is much less compared to SVD. It is now established that those alternatives provide results very close to the ones of the truncated SVD with guaranteed bounds, see e.g.~\cite{demmel19:_improv_analy_and_unified_persp}. Some communication optimal implementations of QRCP exist in the community~\cite{beaupere-tournamentpivoting}, hence we plan to use QRCP before SVD for our distributed memory implementations. The full QRCP decomposition of a matrix $A\in \mathbb{R}^{M\times N}$ can be represented as, $A\Pi = QR = \big(\begin{smallmatrix} Q_1 & Q_2 \end{smallmatrix}\big) \big(\begin{smallmatrix}R_{11} & R_{12}\\ & R_{22} \end{smallmatrix}\big)$, where $\Pi$ is a column permutation matrix, $Q\in \mathbb{R}^{M\times M}$, $Q_1\in \mathbb{R}^{M\times k}$, and $Q_2\in \mathbb{R}^{M\times M-k}$ are orthogonal matrices, $R_{11} \in \mathbb{R}^{k\times k}$ is an upper triangular matrix, $R_{12}\in\mathbb{R}^{k\times N\text{-}k}$, and $R_{22}\in\mathbb{R}^{M\text{-}k\times N\text{-}k}$. $k$-rank approximation of $A$ is obtained as, $\tilde{A} = Q_1Q_1^TA = Q_1 \big(\begin{smallmatrix} R_{11} & R_{12} \end{smallmatrix}\big)\Pi^T$.
 %%The QRCP complexity to obtain $Q_1$ and $Q_1^TA$ is $\mathcal{O}(MNk)$.
@@ -963,12 +966,12 @@ The most accurate low rank approximations rely on truncated SVD, but SVD is expe
 Usually $k$ is very small, hence $B=Q_1^TA$ is a short and fat matrix. To compute SVD of $B$, TSQR factorization of $B^T$, $B^T = Q_T R_T$, can be employed first and then SVD of a small $k\times k$ matrix $R_T^T$, $R_T^T = U_T\Sigma V^T_T$, is computed. Approximation $\tilde{A}$ can be expressed as, $\tilde{A}$= $U\Sigma V^T$, where $U=Q_1U_T$ and $V=Q_TV_T$. 
 
 
-\subsubsection{Performance counts of PTT-approx algorithm in parallel}
-We consider that the input $d$-dimensional tensor is distributed over a grid of $P = P_1 \times P_2\times\cdots P_d$ processors. Each processor has a small subtensor of size $\frac{n}{P_1}\times \frac{n}{P_2} \times \cdots \frac{n}{P_d}$. We assume $P_1=P_2=\cdots P_d$. For computations, we assume processors are arranged in a grid of $P_r \times P_c$, where $P_r=P_c=\sqrt{P}$. Each row (or column) block of the processors has the same set of row (or column) indices of the unfolding matrix. Order of rows and columns of the unfolding matrix of the subtensor on each processor is different from the order of rows and columns in the original unfolding matrices of the tensor. In order to obtain correct results for each node in PTT tree, the final results must be multiplied with the appropriate row and column permutation matrices. We can notice that at the $l$-th level, total number of nodes in the tree is $2^{l-1}$. We consider that only $\frac{P}{2^{l-1}}$ number of processors participate to perform all computations of a node. Now we discuss the $k$-rank approximation cost of a $l$-th level node with unfolding matrix $A\in \mathbb{R}^{M\times N}$ on $P' = \frac{P}{2^{l-1}}$ number of processors in PTT tree. 
+\subsubsection{Performance counts of PTT-approx algorithm}
+We consider that the input $d$-dimensional tensor is distributed over a grid of $P = P_1 \times P_2\times\cdots P_d$ processors. Each processor has a small subtensor of size $\frac{n}{P_1}\times \frac{n}{P_2} \times \cdots \frac{n}{P_d}$. We assume $P_1=P_2=\cdots P_d$. For computations, we assume processors are arranged in a grid of $P_r \times P_c$, where $P_r=P_c=\sqrt{P}$. Each row (or column) block of the processors has the same set of row (or column) indices of the unfolding matrix. Order of rows and columns of the unfolding matrix of the subtensor on each processor is different from the order of rows and columns in the original unfolding matrix of the tensor. In order to obtain correct results for each node in PTT tree, the final results must be multiplied with the appropriate row and column permutation matrices. We can notice that at the $l$-th level, total number of nodes in the tree is $2^{l-1}$. Only $\frac{P}{2^{l-1}}$ number of processors participate to perform all computations of a node. Now we discuss the $k$-rank approximation cost of a $l$-th level node with unfolding matrix $A\in \mathbb{R}^{M\times N}$ on $P' = \frac{P}{2^{l-1}}$ number of processors in PTT tree. 
 \paragraph{QRCP critical path cost}
 The unfolding matrix is equally distributed on the given number of processors (based on our assumption in the beginning or distribution of data in the previous step). Total costs along the critical path to perform QRCP in parallel are the following~\cite{beaupere-tournamentpivoting}:
 \begin{itemize}
-	\item Number of computations = $\mathcal{O}\big(\frac{MNk}{P}\big)$
+	\item Number of computations = $\mathcal{O}\big(\frac{MNk}{P'}\big)$
 	\item Number of messages = $\mathcal{O}(\log_2^2 P')$
 	\item Volume of communications = $\mathcal{O}(\frac{Mk}{\sqrt{P'}} \log_2 P' )$
 \end{itemize}
@@ -982,7 +985,7 @@ After this step, $Q_1$ matrix is distributed along the first column block of pro
 Here we can note that, the same operation can be performed by $\mathcal{O}(k)$ number of messages and $\mathcal{O}(k^2)$ amount of communications. However, we are more interested to obtain an expression for the number of messages which is independent of $k$.
 \paragraph{Redistribution of $R'$ to all available processors}
 \begin{itemize}
-	\item Number of messages = $\mathcal{O}(1)$ (scatter operation)
+	\item Number of messages = $\mathcal{O}(\log_2 P')$ (scatter operation)
 	\item Volume of communications = $\mathcal{O}(\frac{Nk}{\sqrt{P'}})$ 
 \end{itemize}
 \paragraph{TSQR critical path cost}
@@ -999,15 +1002,15 @@ After this step, a small $k\times k$ matrix is broadcasted to all processors.
 After this step, both orthogonal matrices are updated with the results of local SVD computations. Before advancing to the next level, the outputs need to be redistributed for two separate calls.
 \paragraph{Redistribution of outputs for two new calls of the next level}
 \begin{itemize}
-	\item Number of messages = 1 (scatter data to $\frac{\sqrt{P'}}{2}$ number of processors)
-	\item Volume of communications = $\frac{\max(M,N)k}{\sqrt{P'}}$ 
+	\item Number of messages = $\mathcal{O}(\log_2 P')$ (scatter data to $\frac{\sqrt{P'}}{2}$ number of processors)
+	\item Volume of communications = $\mathcal{O}(\frac{\max(M,N)k}{\sqrt{P'}})$ 
 \end{itemize}
-After dropping the lower order terms, total computation costs along the critical path to compute $k$-rank approximation of a $l$-th level node with unfolding matrix $A\in \mathbb{R}^{M\times N}$ on $P'$ number of processors is $\mathcal{O}(\frac{MNk}{P'})$. Similarly, total number of messages and volume of communications along the critical path are
- $\mathcal{O}(\log_2^2P')$ and $\frac{Mk}{\sqrt{P'}} \log_2 P'$ respectively.
+After dropping the lower order terms, total computation costs along the critical path to compute $k$-rank approximation of a node with unfolding matrix $A\in \mathbb{R}^{M\times N}$ on $P'$ number of processors is $\mathcal{O}(\frac{MNk}{P'})$. Similarly, total number of messages and volume of communications along the critical path are
+ $\mathcal{O}(\log_2^2P')$ and $\mathcal{O}(\frac{Mk}{\sqrt{P'}} \log_2 P')$ respectively.
 
 
 
-As PTT tree has $\mathcal{O}(\log_2 d)$ nodes in the critical path, therefore total number of messages transmitted in this path is $\mathcal{O}(\log_2^2 P  \log_2 d)$. For the first node of the PTT tree, $M=N=n^\frac{d}{2}$, thus the total number of computations and amount of communications for this node are atleast $\mathcal{O}(n^\frac{d}{2})$ times more than the other nodes. After dropping the lower order terms, total amount of computations and communications along the critical path in PTT are $\mathcal{O}(\frac{rn^d}{P})$ and $\mathcal{O}(\frac{rn^\frac{d}{2}}{P} \log_2 P)$ respectively.
+As PTT tree has $\mathcal{O}(\log_2 d)$ nodes in the critical path, therefore total number of messages transmitted in this path is $\mathcal{O}(\log_2^2 P  \log_2 d)$. The lower bound on the number of  messages for any algorithm which exchanges data on $P$ processors is $\Omega(\log_2 P)$, and PTT-approx achieves this bound, modulo polylog factor. For the first node of the PTT tree, $M=N=n^\frac{d}{2}$, thus total number of computations and amount of communications for this node are atleast $\mathcal{O}(n^\frac{d}{4})$ times more than the other nodes. After dropping the lower order terms, total amount of computations and communications along the critical path in PTT-approx are $\mathcal{O}(\frac{rn^d}{P})$ and $\mathcal{O}(\frac{rn^\frac{d}{2}}{P} \log_2 P)$ respectively. In our analysis, we did not consider the cost of multiplying with the global row and column permutation matrices because it is possible to directly work with the part of unfolding matrices instead of subtensors.
 
 
 \subsubsection{Performance counts for the sequential case}
@@ -1015,7 +1018,7 @@ Here we discuss the $k$-rank approximation cost of an unfolding matrix $A\in \ma
 
 
 
-\otta and PTT-approx both algorithms employ SVD $d$-$1$ times for a $d$ dimensional tensor. With applying QRCP before SVD, computation costs of \otta and PTT-approx are $\mathcal{O}(rn^d + r^2 (n^{d\text{-}1} + n^{d\text{-}2} + \cdots + n^2) + r^2 (n^{d\text{-}1} + n^{d\text{-}2} + \cdots + n))$ and $\mathcal{O}(rn^d + 2r^2(n^\frac{d}{2}+\cdots+n^2) + r^3 ((2^{3\text{-}1}\text{-}2)n^\frac{d}{4} + \cdots+ (2^{lg(d)\text{-}1}\text{-}2)n^2) + r^3((2^{2\text{-}1}\text{-}1)n^\frac{d}{4}+\cdots+(2^{lg(d)\text{-}1}\text{-}1)n) + r^2 (n^\frac{d}{2} +\cdots+n))$ respectively. For simplicity, we assume that $d$ is perfect power of $2$. Computation cost of the first node for both \otta and PTT-approx algorithms are asymptotically same and equal to $\mathcal{O}(rn^d)$. After the first node, total number of computations in PTT-approx is $\mathcal{O}(n^{\frac{d}{2}\text{-}1})$ times less compared to \otta. 
+\otta and PTT-approx both algorithms employ SVD $d$-$1$ times for a $d$ dimensional tensor. With applying QRCP before SVD, computation costs of \otta and PTT-approx are $\mathcal{O}(rn^d + r^2 (n^{d\text{-}1} + n^{d\text{-}2} + \cdots + n^2) + r^2 (n^{d\text{-}1} + n^{d\text{-}2} + \cdots + n))$ and $\mathcal{O}(rn^d + 2r^2(n^\frac{d}{2}+\cdots+n^2) + r^3 ((2^{3\text{-}1}\text{-}2)n^\frac{d}{4} + \cdots+ (2^{lg(d)\text{-}1}\text{-}2)n^2) + r^3((2^{2\text{-}1}\text{-}1)n^\frac{d}{4}+\cdots+(2^{lg(d)\text{-}1}\text{-}1)n) + r^2 (n^\frac{d}{2} +\cdots+n))$ respectively. Computation cost of the first node for both \otta and PTT-approx algorithms are asymptotically same and equal to $\mathcal{O}(rn^d)$. After the first node, total number of computations in PTT-approx is $\mathcal{O}(n^{\frac{d}{2}\text{-}1})$ times less compared to \otta. 
 
 %%Now we discuss the maximum number of messages sent by any processor in QRCP and SVD for each node computation. Total number of messages sent by any processor to determine the $r$-dominating column of the global unfolding matrix is $\mathcal{O}(\log_2^2 \frac{P}{2^{k-1}})$~\cite{beaupere-tournamentpivoting}. Total number of messages sent by any processor to perform QRCP (or RRQR) in parallel is $\mathcal{O}(\sqrt{rP}\frac{P}{2^{k-1}} \log_2^4\frac{P}{2^{k-1}})$~\cite{carrqr-2015}. By using ScaLAPACK to perform SVD of the selected matrix, each processor needs to send atmax $\mathcal{O}(r)$ number of messages~\cite{Ballard-mcnla-2011}. After dropping some of the lower order terms, the total number of messages sent by any processor to perform all computations of a node at the $k$-th level in the PTT tree is $\mathcal{O}(\log_2^2 \frac{P}{2^{k-1}} + \sqrt{rP\frac{P}{2^{k-1}}} \log_2^4\frac{P}{2^{k-1}} + r)$.
 
@@ -1319,6 +1322,7 @@ In future, we plan to extend our approach to parallelize algorithms like DMRG. W
 \label{app:qrcp+svd}
 \noindent Here we perform analysis of \otta and \hthird methods with the approach discussed in Section~\ref{sec:computationCost} (applying QRCP before SVD, we call this approach QRCP+SVD). We consider $12$-dimensional tensors with $4^{12}$ elements for our experiments. Similar to Section~\ref{sec:expResults}, these tensors are produced by low rank functions of Table~\ref{tab:lowRankFunctions}.
 
+
 \subsection{Approximation error less than or close to $10^{-3}$}
 We aim for approximations with error not far away from $10^{-3}$. Table~\ref{tab:12-dim-accur-e-3} shows performance of both  \otta and \hthird algorithms for different low rank functions. Tensor train ranks of the approximations are depicted in Table~\ref{tab:12-dim-ranks-e-3}.
 
@@ -1359,15 +1363,14 @@ We aim for approximations with error not far away from $10^{-3}$. Table~\ref{tab
 
 Based on the ranks of Table~\ref{tab:12-dim-ranks-e-3}, we select the maximum rank $r$ for each experiment. Now we consider only \emph{Max rank} ($k$) number of leading singular values for each SVD and QRCP+SVD decompositions in both algorithms. We choose $k$= $r$ and $r+1$ for our experiments. Ranks of unfolding matrices in some cases are less than $k$, therefore we select fewer number of leading singular values for those cases.
 
+
+
 %%
 %%In this paragraph, we describe the $QRCP+SVD$ decomposition procedure to obtain $r$-rank approximation of matrix $A$. We first perform QRCP decomposition of matrix $A$, $AP=QR$. After that, we apply economical SVD on the first $r$ rows of $R$, $R(1:r,:) =U\Sigma V$. The approximation matrix $\tilde{A}$ is given by, $\tilde{A}$ = $Q(:,1:r)U\Sigma (PV)^T$ = $U' \Sigma V'^T$, where $U' = Q(1:r,1:r)U$ and $V'= PV$. Here we assume that the rank of $A$ is atleast $r$, if it is not the case we consider the rank instead of $r$. 
 
-
-Tables~\ref{tab:svd-qrcp+svd-seq-e-03} and ~\ref{tab:svd-qrcp+svd-parallel-e-03} show the comparison of SVD and QRCP+SVD approaches to perform fixed rank approximations of unfolding matrices in \otta and \hthird methods respectively.    
-
 \begin{table}[htb]
 	\begin{center}
-	{\small\begin{tabular}{|c|c|c|c|c|c|c|}
+	{\footnotesize\begin{tabular}{|c|c|c|c|c|c|c|}
 			\hline
 			Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
 			%%		\multirow{4}{*} {SVD}
@@ -1405,10 +1408,11 @@ Tables~\ref{tab:svd-qrcp+svd-seq-e-03} and ~\ref{tab:svd-qrcp+svd-parallel-e-03}
 	\end{center}
 \end{table}
 
+Tables~\ref{tab:svd-qrcp+svd-seq-e-03} and ~\ref{tab:svd-qrcp+svd-parallel-e-03} show the comparison of SVD and QRCP+SVD approaches to perform fixed rank approximations of unfolding matrices in \otta and \hthird methods respectively.
 
-\begin{table}[htb]
+\begin{table}[!h]
 	\begin{center}
-	{\small\begin{tabular}{|c|c|c|c|c|c|c|}
+	{\footnotesize\begin{tabular}{|c|c|c|c|c|c|c|}
 			%%		\toprule
 			\hline
 			Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
@@ -1454,7 +1458,7 @@ Tables~\ref{tab:svd-qrcp+svd-seq-e-03} and ~\ref{tab:svd-qrcp+svd-parallel-e-03}
 \subsection{Approximation error less than or  close to $10^{-6}$}
 Similar to the previous subsection, here we aim for approximations with error not far away from $10^{-6}$ and show the results in  Tables~\ref{tab:12-dim-accur-e-6}, \ref{tab:12-dim-ranks-e-6}, \ref{tab:svd-qrcp+svd-seq-e-06}, and \ref{tab:svd-qrcp+svd-parallel-e-06}. 
 
-\begin{table}[htb]
+\begin{table}[!h]
 	\begin{center}
 		{\small\begin{tabular}{|c|c|c|c|c|c|c|}
 			%%		\toprule
@@ -1471,7 +1475,7 @@ Similar to the previous subsection, here we aim for approximations with error no
 	\end{center}
 \end{table}
 
-\begin{table}[htb]
+\begin{table}[!h]
 	\begin{center}
 		{\scriptsize\begin{tabular}{|c|c|c|}
 			\hline
@@ -1573,6 +1577,7 @@ Similar to the previous subsection, here we aim for approximations with error no
 \end{table}
 %%\balance
 Tables~\ref{tab:svd-qrcp+svd-seq-e-03}, ~\ref{tab:svd-qrcp+svd-parallel-e-03}, \ref{tab:svd-qrcp+svd-seq-e-06}, and \ref{tab:svd-qrcp+svd-parallel-e-06} exhibit that acuuracies of the approximations obtained by QRCP+SVD approach are comparable with the SVD approach for \otta as well as \hthird methods. 
+\newpage
 \end{document}
 \endinput
 %%
