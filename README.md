@@ -6,8 +6,55 @@ This repository discusses parallel and scalable tensor train decomposition techi
 
 ## Requirements (Matlab code)
 * Matlab/Octave
-    
-### Run (takes a long time):
+
+### Rank based examples
+
+    >> A = rand(4,4,4,4);
+    >> r=2
+
+    >> Gsvd = tensorTrainCompressionFixedRankSVD(A, r);
+    >> approx_error = computeError(A, Gsvd)
+    Core tensor size = 1 X 4 X 2
+    Core tensor size = 2 X 4 X 2
+    Core tensor size = 2 X 4 X 2
+    Core tensor size = 2 X 4 X 1
+    ne =
+
+        8   16   16    8
+
+    total_elements =  48
+    compression_ratio_percentage =  81.250
+    approx_error =  4.2098
+
+    >> Gqrcpsvd = tensorTrainCompressionFixedRankQRCPSVD(A, r);
+    >> computeError(A, Gqrcpsvd)
+    Core tensor size = 1 X 4 X 2
+    Core tensor size = 2 X 4 X 2
+    Core tensor size = 2 X 4 X 2
+    Core tensor size = 2 X 4 X 1
+    ne =
+
+        8   16   16    8
+
+    total_elements =  48
+    compression_ratio_percentage =  81.250
+    ans =  4.4020
+
+    >> G3qrsvd = parallelTensorTrainCompression_h3_gFixedRankQRCPSVD(A, r);
+    >> approx_error = computeError(A, G3qrsvd)
+    Core tensor size = 1 X 4 X 2
+    Core tensor size = 2 X 4 X 2
+    Core tensor size = 2 X 4 X 2
+    Core tensor size = 2 X 4 X 1
+    ne =
+
+        8   16   16    8
+
+    total_elements =  48
+    compression_ratio_percentage =  81.250
+    approx_error =  4.6781
+
+### Long run  example(takes a long time):
      >> caller()
     Enter the tensor choice:
     1) A tensor with 4^12 elements
