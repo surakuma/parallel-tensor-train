@@ -13,7 +13,9 @@ function [G INVS] = helper_parallelTensorTrainCompression_h3_gFixedRankQRCPSVD(r
 
     C = reshape(A, first_dim, numel(A)/first_dim);
     %%[U S V] = svd(C, 'econ');
+    tic
     [U S V] = qrcp_before_svd(C, fixed_rank);
+    toc
     r = findRank(S);
     %%r = min(r, fixed_rank);
 

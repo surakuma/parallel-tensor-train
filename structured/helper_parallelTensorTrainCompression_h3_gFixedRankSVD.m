@@ -12,7 +12,9 @@ function [G INVS] = helper_parallelTensorTrainCompression_h3_gFixedRankSVD(r1, A
     first_dim = r1 * prod(dims(1:d_half));
 
     C = reshape(A, first_dim, numel(A)/first_dim);
+    tic
     [U S V] = svd(C, 'econ');
+    toc
     r = findRank(S);
     r = min(r, fixed_rank);
 

@@ -7,7 +7,9 @@ function [G] = tensorTrainCompressionFixedRankSVD(A, rank)
     for k=1:d-1
 
     C= reshape(C, r*ndims(k), numel(C)/(r*ndims(k)));
+    tic
     [U S V] = svd(C, 'econ');
+    toc
     r2 = findRank(S);
     r2 = min(r2, rank);
 
