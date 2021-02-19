@@ -18,6 +18,7 @@
 \usepackage{multirow}
 \usepackage{subfig}
 \usepackage{balance}
+\usepackage{enumitem}
 
 
 %% uncomment the below line to remove all todos
@@ -108,7 +109,7 @@ Email:\email{\{laura.grigori,suraj.kumar\}@inria.fr}}
 We consider the problem of developing parallel decomposition and approximation 
 algorithms for high dimensional tensors. We focus on a tensor representation 
 named Tensor Train (TT). It stores a $d$-dimensional tensor in 
-$\mathcal{O}(ndr^2$), much less than the $\mathcal{O}(n^d)$ entries in the 
+$\mathcal{O}(nr^2d)$, much less than the $\mathcal{O}(n^d)$ entries in the 
 original tensor, where $r$ is usually a very small number and depends on the 
 application. Sequential algorithms to compute TT decomposition and 
 TT approximation of a tensor have been proposed in the literature. Here we 
@@ -128,11 +129,10 @@ obtained from quantum chemistry simulations. Our results show that the approach
 which transmits leading singular values to both of its children performs better 
 in practice. Compression ratios and accuracies of the approximations obtained 
 by our approaches are comparable with the sequential algorithm and, in some 
-cases, even better than that.
-
-%%Our results highlight good practical performance of our heuristics.   
-\keywords{Tensor Decompositions \and Tensor Train Representation \and Parallel Algorithms \and  Low Rank Approximations \and Compression Ratios.}
+cases, even better than that. We also show that our algorithms transmit only $\mathcal{O}(\log^2 P\log d)$ number of messages along the critical path for a $d$-dimensional tensor on $P$ processors. The lower bound on the number of  messages for any algorithm which exchanges data on $P$ processors is $\Omega(\log P)$, and our algorithms achieve this bound, modulo polylog factor.
 \end{abstract}
+
+\keywords{Tensor Decompositions \and Tensor Train Representation \and Parallel Algorithms \and  Low Rank Approximations \and Compression Ratios.}
 
 \section{Introduction}
 \label{sec:introduction}
@@ -279,7 +279,7 @@ Recent advances in high performance architectures make us enable to find efficie
 		\caption{Splitting of dimensions in TT and PTT decompositions for a $d$-dimensional tensor. Each node shows a set of dimensions associated with it.~\label{fig:tt:ptt}}
 	\end{center}
 \end{figure*} 
-Even if each step of the TT-decomposition can be parallelized, the separation of each dimension from the remaining ones is an intrinsically sequential process. This is reflected by the depth of the tree which is equal to one less than the number of dimensions of the tensor. From this figure, we also observe that we could achieve maximum parallelism if the tree is structured such that the width is full at each level. Based on this observation, we propose a parallel algorithm to compute TT-representation of a tensor and we call it Parallel Tensor Train (PTT) decomposition throughout the text. Designing communication optimal algorithms to compute TT-representation of a tensor is a part of our future work. Our PTT decomposition algorithm divides the tensor into two subtensors at each level. It exposes parallelism in a balanced binary tree shape and has maximum parallelism at the last level of the tree. Figure~\ref{fig:ptt:workingtree} shows the splitting of dimensions by this algorithm. We prove that the ranks of TT-representation computed by this algorithm are bounded by the ranks of unfolding matrices of the tensor. We also propose a parallel algorithm to compute approximation of a tensor in TT-representation. Our algorithm relies on a hierarchical partitioning of the dimensions of the tensor in a balanced binary tree shape and transmission of leading singular values of associated unfolding matrix from the parent to its children. We consider several approaches based on how leading singular values are transmitted in the tree and  evaluate them for different tensor sizes. Our results show that the approach which transmits leading singular values to both of its children performs better in practice.
+Even if each step of the TT-decomposition can be parallelized, the separation of each dimension from the remaining ones is an intrinsically sequential process. This is reflected by the depth of the tree which is equal to one less than the number of dimensions of the tensor. From this figure, we also observe that we could achieve maximum parallelism if the tree is structured such that the width is full at each level. Based on this observation, we propose a parallel algorithm to compute TT-representation of a tensor and we call it Parallel Tensor Train (PTT) decomposition throughout the text. Designing communication optimal algorithms to compute TT-representation of a tensor is a part of our future work. Our PTT decomposition algorithm divides the tensor into two subtensors at each level. It exposes parallelism in a balanced binary tree shape and has maximum parallelism at the last level of the tree. Figure~\ref{fig:ptt:workingtree} shows the splitting of dimensions by this algorithm. We prove that the ranks of TT-representation computed by this algorithm are bounded by the ranks of unfolding matrices of the tensor. We also propose a parallel algorithm to compute approximation of a tensor in TT-representation. Our algorithm relies on a hierarchical partitioning of the dimensions of the tensor in a balanced binary tree shape and transmission of leading singular values of associated unfolding matrix from the parent to its children. We consider several approaches based on how leading singular values are transmitted in the tree and  evaluate them for different tensor sizes. Our results show that the approach which transmits leading singular values to both of its children performs better in practice. We also show that our algorithms transmit only $\mathcal{O}(\log^2 P\log d)$ number of messages along the critical path for a $d$-dimensional tensor on $P$ processors.
 
 %%different tensor sizes. The main contributions of this paper are:
 %%\begin{itemize}
@@ -770,36 +770,79 @@ Table~\ref{tab:summary} summarizes all parameters of different approaches for Al
 \end{table*}
 
 
+\subsection{Costs of \otta and PTT-approx}
+\label{sec:computationCost}
+Let us assume that the ranks of the TT-representations produced by both algorithms, \otta and PTT-approx, for a $d$ dimensional tensor \tensor{A} $\in \mathbb{R}^{n_1 \times n_2 \times \cdots \times n_d}$ are same, and $r_1=r_2=\cdots=r_{d\text{-}1}=r$. We also assume that $n_1=n_2=\cdots=n_d=n$. For simplicity, we assume that $d$ is perfect power of $2$. 
+
+%%Computation cost of the first SVD is dominating for both algorithms. It is well known that the cost of SVD is highest when the matrix is square. Therefore, PTT-approx performs $\mathcal{O}\big(\frac{\min(n^{\frac{d}{2}}, n^{\frac{d}{2}}) }{\min(n,n^{d\text{-}1})} \big)$ times more computations than \otta.    
+
+The most accurate low rank approximations rely on truncated SVD, but SVD is expensive. There are good alternatives like QR factorization with column pivoting (QRCP) or randomized SVD, whose computational complexity is much less compared to SVD. It is now established that those alternatives provide results very close to the ones of the truncated SVD with guaranteed bounds, see e.g.~\cite{demmel19:_improv_analy_and_unified_persp}. Some communication optimal implementations of QRCP exist in the community~\cite{beaupere-tournamentpivoting}, hence we plan to use QRCP before SVD for our distributed memory implementations. The full QRCP decomposition of a matrix $A\in \mathbb{R}^{M\times N}$ can be represented as, $A\Pi = QR = \big(\begin{smallmatrix} Q_1 & Q_2 \end{smallmatrix}\big) \big(\begin{smallmatrix}R_{11} & R_{12}\\ & R_{22} \end{smallmatrix}\big)$, where $\Pi$ is a column permutation matrix, $Q\in \mathbb{R}^{M\times M}$, $Q_1\in \mathbb{R}^{M\times k}$, and $Q_2\in \mathbb{R}^{M\times M-k}$ are orthogonal matrices, $R_{11} \in \mathbb{R}^{k\times k}$ is an upper triangular matrix, $R_{12}\in\mathbb{R}^{k\times N\text{-}k}$, and $R_{22}\in\mathbb{R}^{M\text{-}k\times N\text{-}k}$. $k$-rank approximation of $A$ is obtained as, $\tilde{A} = Q_1Q_1^TA = Q_1 \big(\begin{smallmatrix} R_{11} & R_{12} \end{smallmatrix}\big)\Pi^T$.
+%%The QRCP complexity to obtain $Q_1$ and $Q_1^TA$ is $\mathcal{O}(MNk)$.
+%%We first obtain $Q_1$ and $Q_1^TA$, and then perform SVD decomposition of $Q_1^TA$. 
+Usually $k$ is very small, hence $B=Q_1^TA$ is a short and fat matrix. To compute SVD of $B$, TSQR factorization of $B^T$, $B^T = Q_T R_T$, can be employed first and then SVD of a small $k\times k$ matrix $R_T^T$, $R_T^T = U_T\Sigma V^T_T$, is computed. Approximation $\tilde{A}$ can be expressed as, $\tilde{A}$= $U\Sigma V^T$, where $U=Q_1U_T$ and $V=Q_TV_T$. 
+
+
+\subsubsection{Performance counts of PTT-approx algorithm:}
+We consider that the input $d$-dimensional tensor is distributed over a grid of $P = P_1 \times P_2\times\cdots P_d$ processors. Each processor has a small subtensor of size $\frac{n}{P_1}\times \frac{n}{P_2} \times \cdots \frac{n}{P_d}$. We assume $P_1=P_2=\cdots P_d$. For computations, we assume processors are arranged in a grid of $P_r \times P_c$, where $P_r=P_c=\sqrt{P}$. Each row (or column) block of the processors has the same set of row (or column) indices of the unfolding matrix. Order of rows and columns of the unfolding matrix of the subtensor on each processor is different from the order of rows and columns in the original unfolding matrix of the tensor. In order to obtain correct results for each node in PTT tree, the final results must be multiplied with the appropriate row and column permutation matrices. We can notice that at the $l$-th level, total number of nodes in the tree is $2^{l-1}$. Only $\frac{P}{2^{l-1}}$ number of processors participate to perform all computations of a node. Now we discuss the $k$-rank approximation cost of a $l$-th level node with unfolding matrix $A\in \mathbb{R}^{M\times N}$ on $P' = \frac{P}{2^{l-1}}$ number of processors in PTT tree. 
+\paragraph{QRCP critical path cost}
+The unfolding matrix is equally distributed on the given number of processors (based on our assumption in the beginning or distribution of data in the previous step). Total costs along the critical path to perform QRCP in parallel are the following~\cite{beaupere-tournamentpivoting}:
+\begin{itemize}[label=$\bullet$]
+	\item Number of computations = $\mathcal{O}\big(\frac{MNk}{P'}\big)$
+	\item Number of messages = $\mathcal{O}(\log_2^2 P')$
+	\item Volume of communications = $\mathcal{O}(\frac{Mk}{\sqrt{P'}} \log_2 P' )$
+\end{itemize}
+After this step, $Q_1$ matrix is distributed along the first column block of processors and $(R_{11} \; R_{12})$ matrix is distributed along the first row block of processors.
+
+\paragraph{Multiplying permutation matrix, $R' = \big(R_{11} \; R_{12}\big) \Pi^T$}
+\begin{itemize}[label=$\bullet$]
+	\item Number of messages = $\mathcal{O}(\log_2 P')$
+	\item Volume of communications = $\mathcal{O}(k^2 \log_2 P')$
+\end{itemize}
+Here we can note that, the same operation can be performed by $\mathcal{O}(k)$ number of messages and $\mathcal{O}(k^2)$ amount of communications. However, we are more interested to obtain an expression for the number of messages which is independent of $k$.
+\paragraph{Redistribution of $R'$ to all available processors}
+\begin{itemize}[label=$\bullet$]
+	\item Number of messages = $\mathcal{O}(\log_2 P')$ (scatter operation)
+	\item Volume of communications = $\mathcal{O}(\frac{Nk}{\sqrt{P'}})$ 
+\end{itemize}
+\paragraph{TSQR critical path cost}
+\begin{itemize}[label=$\bullet$]
+	\item Number of computations = $\mathcal{O}(\frac{Nk^2}{P'})$
+	\item Number of messages = $\mathcal{O}(\log_2 P')$
+	\item Volume of communications = $\mathcal{O}(k^2 \log_2 P')$ 
+\end{itemize}
+After this step, a small $k\times k$ matrix is broadcasted to all processors.
+\paragraph{Local SVD computation}
+\begin{itemize}[label=$\bullet$]
+	\item Number of computations = $\mathcal{O}(k^3)$
+\end{itemize}
+After this step, both orthogonal matrices are updated with the results of local SVD computations. Before advancing to the next level, the outputs need to be redistributed for two separate calls.
+\paragraph{Redistribution of outputs for two new calls of the next level}
+\begin{itemize}[label=$\bullet$]
+	\item Number of messages = $\mathcal{O}(\log_2 P')$ (scatter data to $\frac{\sqrt{P'}}{2}$ number of processors)
+	\item Volume of communications = $\mathcal{O}(\frac{\max(M,N)k}{\sqrt{P'}})$ 
+\end{itemize}
+After dropping the lower order terms, total computation costs along the critical path to compute $k$-rank approximation of a node with unfolding matrix $A\in \mathbb{R}^{M\times N}$ on $P'$ number of processors is $\mathcal{O}(\frac{MNk}{P'})$. Similarly, total number of messages and volume of communications along the critical path are
+$\mathcal{O}(\log_2^2P')$ and $\mathcal{O}(\frac{Mk}{\sqrt{P'}} \log_2 P')$ respectively.
+
+
+
+As PTT tree has $\mathcal{O}(\log_2 d)$ nodes in the critical path, therefore total number of messages transmitted in this path is $\mathcal{O}(\log_2^2 P  \log_2 d)$. The lower bound on the number of  messages for any algorithm which exchanges data on $P$ processors is $\Omega(\log_2 P)$, and PTT-approx achieves this bound, modulo polylog factor. For the first node of the PTT tree, $M=N=n^\frac{d}{2}$, thus total number of computations and amount of communications for this node are atleast $\mathcal{O}(n^\frac{d}{4})$ times more than the other nodes. After dropping the lower order terms, total amount of computations and communications along the critical path in PTT-approx are $\mathcal{O}(\frac{rn^d}{P})$ and $\mathcal{O}(\frac{rn^\frac{d}{2}}{P} \log_2 P)$ respectively. In our analysis, we did not consider the cost of multiplying with the global row and column permutation matrices because it is possible to directly work with the part of unfolding matrices instead of subtensors.
+
+
+\subsubsection{Performance counts for the sequential case:}
+Here we discuss the $k$-rank approximation cost of an unfolding matrix $A\in \mathbb{R}^{M\times N}$ on one processor. The QRCP complexity to obtain $Q_1$ and $Q_1^TA$ is $\mathcal{O}(MNk)$. Complexity to obtain $k$ singular values, left and right singular vectors of a matrix $A\in\mathbb{R}^{k\times N}$ by employing TSQR and SVD is $\mathcal{O}(Nk^2 +k^3)$. After dropping some of the lower order terms, the overall complexity of applying QRCP and SVD to obtain $k$-rank approximation in our approach is $\mathcal{O}(MNk + Nk^2)$.
+
+
+
+\otta and PTT-approx both algorithms employ SVD $d$-$1$ times for a $d$ dimensional tensor. With applying QRCP before SVD, computation costs of \otta and PTT-approx are $\mathcal{O}(rn^d + r^2 (n^{d\text{-}1} + n^{d\text{-}2} + \cdots + n^2) + r^2 (n^{d\text{-}1} + n^{d\text{-}2} + \cdots + n))$ and $\mathcal{O}(rn^d + 2r^2(n^\frac{d}{2}+\cdots+n^2) + r^3 ((2^{3\text{-}1}\text{-}2)n^\frac{d}{4} + \cdots+ (2^{lg(d)\text{-}1}\text{-}2)n^2) + r^3((2^{2\text{-}1}\text{-}1)n^\frac{d}{4}+\cdots+(2^{lg(d)\text{-}1}\text{-}1)n) + r^2 (n^\frac{d}{2} +\cdots+n))$ respectively. Computation cost of the first node for both \otta and PTT-approx algorithms are asymptotically same and equal to $\mathcal{O}(rn^d)$. After the first node, total number of computations in PTT-approx is $\mathcal{O}(n^{\frac{d}{2}\text{-}1})$ times less compared to \otta. 
+
+
+
+In this article, we show effectiveness and stability of our algorithms only with sequential SVD. Accuracy results with applying QRCP before SVD are presented in Appendix~\ref{app:qrcp+svd}. Distributed memory implementations of \otta and PTT-approx are currently underway and out of scope of this paper.
+
 
 \section{Experimental Setup \& Results}
 \label{sec:expResults}
-\subsection{Computation Costs of \otta and PTT-approx}
-\label{sec:exp:computationCost}
-\otta and PTT-approx both algorithms employ SVD $d$-$1$ times for a $d$ dimensional tensor \tensor{A} $\in \mathbb{R}^{n_1 \times n_2 \times \cdots \times n_d}$. Let us assume that the ranks of the TT-representations produced by both algorithms are same, and $r_1=r_2=\cdots=r_{d\text{-}1}=r$. We also assume that $n_1=n_2=\cdots=n_d=n$. Computation cost of the first SVD is dominating for both algorithms. It is well known that the cost of SVD is highest when the matrix is square. Therefore, PTT-approx performs $\mathcal{O}\big(\frac{\min(n^{\frac{d}{2}}, n^{\frac{d}{2}}) }{\min(n,n^{d\text{-}1})} \big)$ times more computations than \otta.       
-
-The most accurate low rank approximations rely on truncated SVD, but SVD is expensive. There are good alternatives like QR factorization with column pivoting (QRCP) or randomized SVD, whose computational complexity is much less compared to SVD. It is now established that those alternatives provide results very close to the ones of the truncated SVD with guaranteed bounds, see e.g.~\cite{demmel19:_improv_analy_and_unified_persp}. Some communication optimal implementations of QRCP exist in the community~\cite{beaupere-tournamentpivoting}, hence we plan to use QRCP before SVD for our distributed memory implementations. The full QRCP decomposition of a matrix $A\in \mathbb{R}^{m\times p}$ can be represented as, $A\Pi = QR = \big(\begin{smallmatrix} Q_1 & Q_2 \end{smallmatrix}\big) \big(\begin{smallmatrix}R_{11} & R_{12}\\ & R_{22} \end{smallmatrix}\big)$, where $\Pi$ is a column permutation matrix, $Q\in \mathbb{R}^{m\times m}$, $Q_1\in \mathbb{R}^{m\times k}$, and $Q_2\in \mathbb{R}^{m\times m-k}$ are orthogonal matrices, $R_{11} \in \mathbb{R}^{k\times k}$ is an upper triangular matrix, $R_{12}\in\mathbb{R}^{k\times p\text{-}k}$, and $R_{22}\in\mathbb{R}^{m\text{-}k\times p\text{-}k}$. $k$-rank approximation of $A$ is obtained as, $\tilde{A} = Q_1Q_1^TA = Q_1 \big(\begin{smallmatrix} R_{11} & R_{12} \end{smallmatrix}\big)\Pi^T$. The QRCP complexity to obtain $Q_1$ and $Q_1^TA$ is $\mathcal{O}(mpk)$. We first obtain $Q_1$ and $Q_1^TA$, and then perform SVD decomposition of $Q_1^TA$, $Q_1^TA = U_1 \Sigma V^T$. Approximation $\tilde{A}$ can be expressed as, $\tilde{A}$= $U\Sigma V^T$, where $U=Q_1U_1$. As the SVD complexity to obtain $\min(m,p)$ singular values, left and right singular vectors of a matrix $A\in\mathbb{R}^{m\times p}$ is $\mathcal{O}(mp\min(m,p))$, thus the overall complexity of applying QRCP and SVD to obtain $k$-rank approximation in our approach is $\mathcal{O}(mpk + k^2p)$.     
-
-
-With applying QRCP before SVD, computation costs of \otta and PTT-approx are $\mathcal{O}(rn^d + r^2 (n^{d\text{-}1} + n^{d\text{-}2} + \cdots  + n^2) + r^2 (n^{d\text{-}1} + n^{d\text{-}2} + \cdots + n))$ and $\mathcal{O}(rn^d + 2r^2(n^\frac{d}{2}+\cdots+n^2) + r^3 ((2^{3\text{-}1}\text{-}2)n^\frac{d}{4} + \cdots+ (2^{lg(d)\text{-}1}\text{-}2)n^2) + r^3((2^{2\text{-}1}\text{-}1)n^\frac{d}{4}+\cdots+(2^{lg(d)\text{-}1}\text{-}1)n) + r^2 (n^\frac{d}{2} +\cdots+n))$ respectively. For simplicity, we assume that $d$ is perfect power of $2$. Computation cost of the first node for both \otta and PTT-approx algorithms are asymptotically same and equal to $\mathcal{O}(rn^d)$. After the first node, total number of computations in PTT-approx is $\mathcal{O}(n^{\frac{d}{2}\text{-}1})$ times less compared to \otta. Critical path length of PTT-approx also has  $\mathcal{O}(n^{\frac{d}{2}\text{-}1})$ times less computations than \otta after the first node. 
-
-In this paper, we show effectiveness and stability of our algorithms only with SVD. Accuracy results with applying QRCP before SVD are presented in Appendix~\ref{app:qrcp+svd}. Distributed memory implementations of \otta and PTT-approx are currently underway and out of scope of this paper.
-
-%%using QRCP before SVD
-
-%%\begin{pmatrix}
-%%	R_{11} & R_{12}\\
-%%	& R_{22} 
-%%\end{pmatrix}
-
-%%Overall computations = O(rn^d + r^2 (n^(d-1) + ...... + n^2) + r^2 (n^(d-1) + ...... + n))
-%%
-%%Overall computations = O(rn^d + 2r^2(n^(d/2)+.....+n^2) + r^3 ((2^(3-1) -2)n^(d/4) + ..... + (2^(lg(d)-1)-2)n^2) + r^3 ((2^(2-1)-1)n^(d/4) + ......+ (2^(lg(d)-1)-1)n) + r^2 (n^(d/2)+....+n))
-%%
-%%
-%% $\mathcal{O}(rn^d+r^2n^{d-1} + r^2n^{d-2} +\cdots + r^2n^2)$ and $\mathcal{O}(rn^d + 2r^2n^{\frac{d}{2}} + (2^2r-2r+2)r^2n^{\frac{d}{4}}+\cdots+ (2^{log{}d\text{-}1}r -2r+2)r^2n^{\frac{d}{2^{log{}d\text{-}1}}})$ respectively. The critical path of PTT-approx involves $\mathcal{O}(rn^d + r^2n^{\frac{d}{2}} + r^3n^{\frac{d}{4}} +\cdots+ r^3n^{\frac{d}{2^{log{}d\text{-}1}}})$ computations. After the first SVD call, the total number of computations in the critical path of PTT-approx is $\mathcal{O}(n^{\frac{d}{2}\text{-1}})$ times less compared to \otta. Distributed memory implementations of \otta and PTT-approx using RRQR are currently underway and out of scope of this paper.
-
-%% Some communication optimal implementations of QRCP exist in the community~\cite{beaupere-tournamentpivoting}, hence we plan to use QRCP instead of SVD for our distributed memory implementations.
-
 \subsection{Experimental Setup}
 We show effectiveness and stability of our methods using Matlab.  
 %%All our approaches are designed to run in parallel, but to avoid parallel implementation challenges and to show effectiveness of our methods we use Matlab to implement all the approaches.
@@ -1043,139 +1086,137 @@ In future, we plan to extend our approach to parallelize algorithms like DMRG. W
 %
  \bibliographystyle{splncs04}
  \bibliography{paralleltt}
-
-\newpage
-
 \appendix
 \section{Accuracy Results with QRCP and SVD}
 \label{app:qrcp+svd}
-\noindent Here we perform analysis of \otta and \hthird methods with the approach discussed in Section~\ref{sec:exp:computationCost} (applying QRCP before SVD, we call this approach QRCP+SVD). We consider $12$-dimensional tensors with $4^{12}$ elements for our experiments. Similar to Section~\ref{sec:expResults}, these tensors are produced by low rank functions of Table~\ref{tab:lowRankFunctions}.
+\noindent Here we perform analysis of \otta and \hthird methods with the approach discussed in Section~\ref{sec:computationCost} (applying QRCP before SVD, we call this approach QRCP+SVD). We consider $12$-dimensional tensors with $4^{12}$ elements for our experiments. Similar to Section~\ref{sec:expResults}, these tensors are produced by low rank functions of Table~\ref{tab:lowRankFunctions}.
+
 
 \subsection{Approximation error less than or close to $10^{-3}$}
 We aim for approximations with error not far away from $10^{-3}$. Table~\ref{tab:12-dim-accur-e-3} shows performance of both  \otta and \hthird algorithms for different low rank functions. Tensor train ranks of the approximations are depicted in Table~\ref{tab:12-dim-ranks-e-3}.
 
 \begin{table}[htb]
 	\begin{center}
-	\begin{tabular}{|c|c|c|c|c|c|c|}
-		\hline
-		Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
-		\multirow{3}{*} {\otta} 
-		& compr    & 99.996     & 99.999     & 99.994     & 99.991     & 99.986 \\ \cline{2-7}
-		& ne       & 596        & 176        & 992        & 1580       & 2336 \\ \cline{2-7}
-		& OA       & 3.692e-04 & 2.615e-09 & 3.224e-04 & 4.233e-04 & 4.774e-04 \\ \cline{1-7}
-		\multirow{3}{*} {\hthird}
-		& compr    & 99.996     & 99.999     & 99.994     & 99.991     & 99.986 \\ \cline{2-7}
-		& ne       & 596        & 176        & 992        & 1528       & 2336 \\ \cline{2-7}
-		& OA       & 3.692e-04 & 1.252e-11 & 3.223e-04 & 5.042e-04 & 4.774e-04 \\ \cline{1-7} 
-	\end{tabular}
-	\caption{Prescribed accuracy = $10^{-3}$.~\label{tab:12-dim-accur-e-3}}
+		{\small\begin{tabular}{|c|c|c|c|c|c|c|}
+				\hline
+				Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
+				\multirow{3}{*} {\otta} 
+				& compr    & 99.996     & 99.999     & 99.994     & 99.991     & 99.986 \\ \cline{2-7}
+				& ne       & 596        & 176        & 992        & 1580       & 2336 \\ \cline{2-7}
+				& OA       & 3.692e-04 & 2.615e-09 & 3.224e-04 & 4.233e-04 & 4.774e-04 \\ \cline{1-7}
+				\multirow{3}{*} {\hthird}
+				& compr    & 99.996     & 99.999     & 99.994     & 99.991     & 99.986 \\ \cline{2-7}
+				& ne       & 596        & 176        & 992        & 1528       & 2336 \\ \cline{2-7}
+				& OA       & 3.692e-04 & 1.252e-11 & 3.223e-04 & 5.042e-04 & 4.774e-04 \\ \cline{1-7} 
+		\end{tabular}}
+		\caption{Prescribed accuracy = $10^{-3}$.~\label{tab:12-dim-accur-e-3}}
 	\end{center}
 \end{table}
 
 
 \begin{table}[htb]
 	\begin{center}
-		\begin{tabular}{|c|c|c|}
-			\hline
-			&\otta ranks & \hthird ranks\\
-			& ($r_0,r_1,\cdots, r_{12}$) & ($r_0,r_1,\cdots, r_{12}$)\\ \hline
-			$Log$ & ($1, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 1$) & ($1, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 1$)\\ \hline
-			$Sin$ & ($1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1$) & ($1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1$)\\ \hline
-			$ISR$ & ($1, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 1$) & ($1, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 1$)\\ \hline
-			$ICR$ & ($1, 4, 6, 6, 6, 7, 7, 7, 7, 6, 6, 4, 1$) & ($1, 4, 6, 6, 6, 7, 7, 7, 6, 6, 6, 4, 1$)\\ \hline
-			$IPR$ & ($1, 4, 8, 8, 8, 8, 8, 8, 8, 8, 8, 4, 1$) & ($1, 4, 8, 8, 8, 8, 8, 8, 8, 8, 8, 4, 1$)\\ \hline			
-		\end{tabular}
+		{\small\begin{tabular}{|c|c|c|}
+				\hline
+				&\otta ranks & \hthird ranks\\
+				& ($r_0,r_1,\cdots, r_{12}$) & ($r_0,r_1,\cdots, r_{12}$)\\ \hline
+				$Log$ & ($1, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 1$) & ($1, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 1$)\\ \hline
+				$Sin$ & ($1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1$) & ($1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1$)\\ \hline
+				$ISR$ & ($1, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 1$) & ($1, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 1$)\\ \hline
+				$ICR$ & ($1, 4, 6, 6, 6, 7, 7, 7, 7, 6, 6, 4, 1$) & ($1, 4, 6, 6, 6, 7, 7, 7, 6, 6, 6, 4, 1$)\\ \hline
+				$IPR$ & ($1, 4, 8, 8, 8, 8, 8, 8, 8, 8, 8, 4, 1$) & ($1, 4, 8, 8, 8, 8, 8, 8, 8, 8, 8, 4, 1$)\\ \hline			
+		\end{tabular}}
 		\caption{Tensor Train ranks for prescribed accuracy of $10^{-3}$.~\label{tab:12-dim-ranks-e-3}}
 	\end{center}
 \end{table}
 
 Based on the ranks of Table~\ref{tab:12-dim-ranks-e-3}, we select the maximum rank $r$ for each experiment. Now we consider only \emph{Max rank} ($k$) number of leading singular values for each SVD and QRCP+SVD decompositions in both algorithms. We choose $k$= $r$ and $r+1$ for our experiments. Ranks of unfolding matrices in some cases are less than $k$, therefore we select fewer number of leading singular values for those cases.
 
+
+
 %%
 %%In this paragraph, we describe the $QRCP+SVD$ decomposition procedure to obtain $r$-rank approximation of matrix $A$. We first perform QRCP decomposition of matrix $A$, $AP=QR$. After that, we apply economical SVD on the first $r$ rows of $R$, $R(1:r,:) =U\Sigma V$. The approximation matrix $\tilde{A}$ is given by, $\tilde{A}$ = $Q(:,1:r)U\Sigma (PV)^T$ = $U' \Sigma V'^T$, where $U' = Q(1:r,1:r)U$ and $V'= PV$. Here we assume that the rank of $A$ is atleast $r$, if it is not the case we consider the rank instead of $r$. 
 
-
-Tables~\ref{tab:svd-qrcp+svd-seq-e-03} and ~\ref{tab:svd-qrcp+svd-parallel-e-03} show the comparison of SVD and QRCP+SVD approaches to perform fixed rank approximations of unfolding matrices in \otta and \hthird methods respectively.    
-
 \begin{table}[htb]
 	\begin{center}
-	\begin{tabular}{|c|c|c|c|c|c|c|}
-		\hline
-		Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
-%%		\multirow{4}{*} {SVD}
-%%		& Max rank & 3         & 1         & 4         & 6         & 7 \\ \cline{2-7}
-%%		& compr    & 99.998    & 100.000   & 99.996    & 99.992    & 99.989 \\ \cline{2-7}
-%%		& ne       & 384       & 48        & 672       & 1376      & 1824 \\ \cline{2-7}
-%%		& OA       & 0.013067  & 2888.3    & 0.0034188 & 7.044e-04 & 0.0031929 \\ \cline{1-7}
-%%		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP+ \\SVD\end{tabular}}
-%%		& Max rank & 3         & 1         & 4         & 6         & 7 \\ \cline{2-7}
-%%		& compr    & 99.998    & 100.000   & 99.996    & 99.992    & 99.989 \\ \cline{2-7}
-%%		& ne       & 384       & 48        & 672       & 1376      & 1824 \\ \cline{2-7}
-%%		& OA       & 0.044392  & 2888.3    & 0.017168  & 0.0056326 & 0.011119 \\ \cline{1-7} 
-		\multirow{4}{*} {SVD}
-		& Max rank & 4         & 2         & 5         & 7         & 8 \\ \cline{2-7}
-		& compr    & 99.996    & 99.999    & 99.994    & 99.989    & 99.986 \\ \cline{2-7}
-		& ne       & 672       & 176       & 992       & 1824      & 2336 \\ \cline{2-7}
-		& OA       & 2.750e-04 & 2.615e-09 & 3.224e-04 & 9.849e-05 & 4.774e-04 \\ \cline{1-7}
-		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP+ \\SVD\end{tabular}}
-		& Max rank & 4         & 2         & 5         & 7         & 8 \\ \cline{2-7}
-		& compr    & 99.996    & 99.999    & 99.994    & 99.989    & 99.986 \\ \cline{2-7}
-		& ne       & 672       & 176       & 992       & 1824      & 2336 \\ \cline{2-7}
-		& OA       & 0.0014448 & 2.277e-10 & 0.0031970 & 7.142e-04 & 0.0023176 \\ \cline{1-7}
-		\multirow{4}{*} {SVD}
-		& Max rank & 5         & 3         & 6         & 8         & 9 \\ \cline{2-7}
-		& compr    & 99.994    & 99.998    & 99.992    & 99.986    & 99.983 \\ \cline{2-7}
-		& ne       & 992       & 384       & 1376      & 2336      & 2912 \\ \cline{2-7}
-		& OA       & 6.079e-06 & 3.467e-09 & 2.913e-05 & 1.177e-05 & 1.227e-04 \\ \cline{1-7}
-		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP+ \\SVD\end{tabular}}
-		& Max rank & 5         & 3         & 6         & 8         & 9 \\ \cline{2-7}
-		& compr    & 99.994    & 99.998    & 99.992    & 99.986    & 99.983 \\ \cline{2-7}
-		& ne       & 992       & 384       & 1376      & 2336      & 2912 \\ \cline{2-7}
-		& OA       & 1.384e-05 & 1.428e-10 & 1.515e-04 & 5.287e-05 & 8.425e-04 \\ \cline{1-7}
-	\end{tabular}
-	\caption{Comparison of SVD and QRCP+SVD for fixed ranks with \otta tree.\label{tab:svd-qrcp+svd-seq-e-03}}
+		{\footnotesize\begin{tabular}{|c|c|c|c|c|c|c|}
+				\hline
+				Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
+				%%		\multirow{4}{*} {SVD}
+				%%		& Max rank & 3         & 1         & 4         & 6         & 7 \\ \cline{2-7}
+				%%		& compr    & 99.998    & 100.000   & 99.996    & 99.992    & 99.989 \\ \cline{2-7}
+				%%		& ne       & 384       & 48        & 672       & 1376      & 1824 \\ \cline{2-7}
+				%%		& OA       & 0.013067  & 2888.3    & 0.0034188 & 7.044e-04 & 0.0031929 \\ \cline{1-7}
+				%%		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP \\+SVD\end{tabular}}
+				%%		& Max rank & 3         & 1         & 4         & 6         & 7 \\ \cline{2-7}
+				%%		& compr    & 99.998    & 100.000   & 99.996    & 99.992    & 99.989 \\ \cline{2-7}
+				%%		& ne       & 384       & 48        & 672       & 1376      & 1824 \\ \cline{2-7}
+				%%		& OA       & 0.044392  & 2888.3    & 0.017168  & 0.0056326 & 0.011119 \\ \cline{1-7} 
+				\multirow{4}{*} {SVD}
+				& Max rank & 4         & 2         & 5         & 7         & 8 \\ \cline{2-7}
+				& compr    & 99.996    & 99.999    & 99.994    & 99.989    & 99.986 \\ \cline{2-7}
+				& ne       & 672       & 176       & 992       & 1824      & 2336 \\ \cline{2-7}
+				& OA       & 2.750e-04 & 2.615e-09 & 3.224e-04 & 9.849e-05 & 4.774e-04 \\ \cline{1-7}
+				\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP \\+SVD\end{tabular}}
+				& Max rank & 4         & 2         & 5         & 7         & 8 \\ \cline{2-7}
+				& compr    & 99.996    & 99.999    & 99.994    & 99.989    & 99.986 \\ \cline{2-7}
+				& ne       & 672       & 176       & 992       & 1824      & 2336 \\ \cline{2-7}
+				& OA       & 0.0014448 & 2.277e-10 & 0.0031970 & 7.142e-04 & 0.0023176 \\ \cline{1-7}
+				\multirow{4}{*} {SVD}
+				& Max rank & 5         & 3         & 6         & 8         & 9 \\ \cline{2-7}
+				& compr    & 99.994    & 99.998    & 99.992    & 99.986    & 99.983 \\ \cline{2-7}
+				& ne       & 992       & 384       & 1376      & 2336      & 2912 \\ \cline{2-7}
+				& OA       & 6.079e-06 & 3.467e-09 & 2.913e-05 & 1.177e-05 & 1.227e-04 \\ \cline{1-7}
+				\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP \\+SVD\end{tabular}}
+				& Max rank & 5         & 3         & 6         & 8         & 9 \\ \cline{2-7}
+				& compr    & 99.994    & 99.998    & 99.992    & 99.986    & 99.983 \\ \cline{2-7}
+				& ne       & 992       & 384       & 1376      & 2336      & 2912 \\ \cline{2-7}
+				& OA       & 1.384e-05 & 1.428e-10 & 1.515e-04 & 5.287e-05 & 8.425e-04 \\ \cline{1-7}
+		\end{tabular}}
+		\caption{Comparison of SVD and QRCP+SVD for fixed ranks with \otta tree.\label{tab:svd-qrcp+svd-seq-e-03}}
 	\end{center}
 \end{table}
 
+Tables~\ref{tab:svd-qrcp+svd-seq-e-03} and ~\ref{tab:svd-qrcp+svd-parallel-e-03} show the comparison of SVD and QRCP+SVD approaches to perform fixed rank approximations of unfolding matrices in \otta and \hthird methods respectively.
 
-\begin{table}[htb]
+\begin{table}[!h]
 	\begin{center}
-	\begin{tabular}{|c|c|c|c|c|c|c|}
-		%%		\toprule
-		\hline
-		Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
-%%		\multirow{4}{*} {SVD}
-%%		& Max rank & 3         & 1         & 4          & 6          & 7 \\ \cline{2-7}
-%%		& compr    & 99.998    & 100.000   & 99.996     & 99.992     & 99.989 \\ \cline{2-7}
-%%		& ne       & 384       & 48        & 672        & 1376       & 1824 \\ \cline{2-7}
-%%		& OA       & 0.013067  & 2888.2    & 0.0034181  & 7.042e-04  & 0.0031918 \\ \cline{1-7}
-%%		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP+ \\SVD\end{tabular}} 
-%%		& Max rank & 3         & 1         & 4          & 6          & 7 \\ \cline{2-7}
-%%		& compr    & 99.998    & 100.000   & 99.996     & 99.992     & 99.989 \\ \cline{2-7}
-%%		& ne       & 384       & 48        & 672        & 1376       & 1824 \\ \cline{2-7}
-%%		& OA       & 0.032292  & 2888.4    & 0.0086002  & 0.0043807  & 0.011387 \\ \cline{1-7}
-		\multirow{4}{*} {SVD}
-		& Max rank & 4         & 2         & 5          & 7          & 8 \\ \cline{2-7}
-		& compr    & 99.996    & 99.999    & 99.994     & 99.989     & 99.986 \\ \cline{2-7}
-		& ne       & 672       & 176       & 992        & 1824       & 2336 \\ \cline{2-7}
-		& OA       & 2.750e-04 & 1.252e-11 & 3.223e-04  & 9.847e-05  & 4.774e-04 \\ \cline{1-7}
-		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP+ \\SVD\end{tabular}}
-		& Max rank & 4         & 2         & 5          & 7          & 8 \\ \cline{2-7}
-		& compr    & 99.996    & 99.999    & 99.994     & 99.989     & 99.986 \\ \cline{2-7}
-		& ne       & 672       & 176       & 992        & 1824       & 2336 \\ \cline{2-7}
-		& OA       & 9.336e-04 & 7.338e-12 & 0.0017088  & 4.554e-04  & 0.0014991 \\ \cline{1-7}
-		\multirow{4}{*} {SVD}
-		& Max rank & 5         & 3         & 6          & 8          & 9 \\ \cline{2-7}
-		& compr    & 99.994    & 99.998    & 99.992     & 99.986     & 99.983 \\ \cline{2-7}
-		& ne       & 992       & 384       & 1376       & 2336       & 2912 \\ \cline{2-7}
-		& OA       & 6.079e-06 & 2.177e-11 & 2.913e-05  & 1.177e-05  & 1.226e-04 \\ \cline{1-7}
-		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP+ \\SVD\end{tabular}}
-		& Max rank & 5         & 3         & 6          & 8          & 9 \\ \cline{2-7}
-		& compr    & 99.994    & 99.998    & 99.992     & 99.986     & 99.983 \\ \cline{2-7}
-		& ne       & 992       & 384       & 1376       & 2336       & 2912 \\ \cline{2-7}
-		& OA       & 1.016e-05 & 6.732e-12 & 7.719e-05  & 3.490e-05  & 6.393e-04 \\ \cline{1-7}
-	\end{tabular}
-	\caption{Comparison of SVD and QRCP+SVD for fixed ranks with \hthird tree.~\label{tab:svd-qrcp+svd-parallel-e-03}}
+		{\footnotesize\begin{tabular}{|c|c|c|c|c|c|c|}
+				%%		\toprule
+				\hline
+				Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
+				%%		\multirow{4}{*} {SVD}
+				%%		& Max rank & 3         & 1         & 4          & 6          & 7 \\ \cline{2-7}
+				%%		& compr    & 99.998    & 100.000   & 99.996     & 99.992     & 99.989 \\ \cline{2-7}
+				%%		& ne       & 384       & 48        & 672        & 1376       & 1824 \\ \cline{2-7}
+				%%		& OA       & 0.013067  & 2888.2    & 0.0034181  & 7.042e-04  & 0.0031918 \\ \cline{1-7}
+				%%		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP \\+SVD\end{tabular}} 
+				%%		& Max rank & 3         & 1         & 4          & 6          & 7 \\ \cline{2-7}
+				%%		& compr    & 99.998    & 100.000   & 99.996     & 99.992     & 99.989 \\ \cline{2-7}
+				%%		& ne       & 384       & 48        & 672        & 1376       & 1824 \\ \cline{2-7}
+				%%		& OA       & 0.032292  & 2888.4    & 0.0086002  & 0.0043807  & 0.011387 \\ \cline{1-7}
+				\multirow{4}{*} {SVD}
+				& Max rank & 4         & 2         & 5          & 7          & 8 \\ \cline{2-7}
+				& compr    & 99.996    & 99.999    & 99.994     & 99.989     & 99.986 \\ \cline{2-7}
+				& ne       & 672       & 176       & 992        & 1824       & 2336 \\ \cline{2-7}
+				& OA       & 2.750e-04 & 1.252e-11 & 3.223e-04  & 9.847e-05  & 4.774e-04 \\ \cline{1-7}
+				\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP \\+SVD\end{tabular}}
+				& Max rank & 4         & 2         & 5          & 7          & 8 \\ \cline{2-7}
+				& compr    & 99.996    & 99.999    & 99.994     & 99.989     & 99.986 \\ \cline{2-7}
+				& ne       & 672       & 176       & 992        & 1824       & 2336 \\ \cline{2-7}
+				& OA       & 9.336e-04 & 7.338e-12 & 0.0017088  & 4.554e-04  & 0.0014991 \\ \cline{1-7}
+				\multirow{4}{*} {SVD}
+				& Max rank & 5         & 3         & 6          & 8          & 9 \\ \cline{2-7}
+				& compr    & 99.994    & 99.998    & 99.992     & 99.986     & 99.983 \\ \cline{2-7}
+				& ne       & 992       & 384       & 1376       & 2336       & 2912 \\ \cline{2-7}
+				& OA       & 6.079e-06 & 2.177e-11 & 2.913e-05  & 1.177e-05  & 1.226e-04 \\ \cline{1-7}
+				\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP \\+SVD\end{tabular}}
+				& Max rank & 5         & 3         & 6          & 8          & 9 \\ \cline{2-7}
+				& compr    & 99.994    & 99.998    & 99.992     & 99.986     & 99.983 \\ \cline{2-7}
+				& ne       & 992       & 384       & 1376       & 2336       & 2912 \\ \cline{2-7}
+				& OA       & 1.016e-05 & 6.732e-12 & 7.719e-05  & 3.490e-05  & 6.393e-04 \\ \cline{1-7}
+		\end{tabular}}
+		\caption{Comparison of SVD and QRCP+SVD for fixed ranks with \hthird tree.~\label{tab:svd-qrcp+svd-parallel-e-03}}
 	\end{center}
 \end{table}
 
@@ -1184,37 +1225,37 @@ Tables~\ref{tab:svd-qrcp+svd-seq-e-03} and ~\ref{tab:svd-qrcp+svd-parallel-e-03}
 
 
 \subsection{Approximation error less than or  close to $10^{-6}$}
-Similar to the previous subsection, here we aim for approximations with error not far away from $10^{-6}$ and show the results in  Tables~\ref{tab:12-dim-accur-e-6} , \ref{tab:12-dim-ranks-e-6}, \ref{tab:svd-qrcp+svd-seq-e-06}, and \ref{tab:svd-qrcp+svd-parallel-e-06}. 
+Similar to the previous subsection, here we aim for approximations with error not far away from $10^{-6}$ and show the results in  Tables~\ref{tab:12-dim-accur-e-6}, \ref{tab:12-dim-ranks-e-6}, \ref{tab:svd-qrcp+svd-seq-e-06}, and \ref{tab:svd-qrcp+svd-parallel-e-06}. 
 
-\begin{table}[htb]
+\begin{table}[!h]
 	\begin{center}
-	\begin{tabular}{|c|c|c|c|c|c|c|}
-		%%		\toprule
-		\hline
-		Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
-		\multirow{3}{*} {\otta} & compr & 99.993 & 99.999 & 99.987 & 99.981 & 99.971 \\ \cline{2-7} 
-		& ne    & 1212 & 176 & 2240 & 3184 & 4864 \\ \cline{2-7} 
-		& OA    & 2.271e-07 & 2.615e-09 & 1.834e-07 & 4.885e-07 & 4.836e-07 \\ \cline{1-7} 
-		\multirow{3}{*} {\hthird} & compr & 99.993 & 99.999 & 99.987 & 99.981 & 99.970 \\ \cline{2-7} 
-		& ne    & 1212 & 176 & 2240 & 3184 & 4964 \\ \cline{2-7} 
-		& OA    & 2.265e-07 & 1.252e-11 & 1.834e-07 & 4.885e-07 & 3.999e-07 \\ \cline{1-7} 
-	\end{tabular}
-	\caption{Prescribed accuracy = $10^{-6}$.\label{tab:12-dim-accur-e-6}}
+		{\small\begin{tabular}{|c|c|c|c|c|c|c|}
+				%%		\toprule
+				\hline
+				Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
+				\multirow{3}{*} {\otta} & compr & 99.993 & 99.999 & 99.987 & 99.981 & 99.971 \\ \cline{2-7} 
+				& ne    & 1212 & 176 & 2240 & 3184 & 4864 \\ \cline{2-7} 
+				& OA    & 2.271e-07 & 2.615e-09 & 1.834e-07 & 4.885e-07 & 4.836e-07 \\ \cline{1-7} 
+				\multirow{3}{*} {\hthird} & compr & 99.993 & 99.999 & 99.987 & 99.981 & 99.970 \\ \cline{2-7} 
+				& ne    & 1212 & 176 & 2240 & 3184 & 4964 \\ \cline{2-7} 
+				& OA    & 2.265e-07 & 1.252e-11 & 1.834e-07 & 4.885e-07 & 3.999e-07 \\ \cline{1-7} 
+		\end{tabular}}
+		\caption{Prescribed accuracy = $10^{-6}$.\label{tab:12-dim-accur-e-6}}
 	\end{center}
 \end{table}
 
-\begin{table}[htb]
+\begin{table}[!h]
 	\begin{center}
-		\begin{tabular}{|c|c|c|}
-			\hline
-			&\otta ranks & \hthird ranks\\
-			& ($r_0,r_1,\cdots, r_{12}$) & ($r_0,r_1,\cdots, r_{12}$)\\ \hline
-			$Log$ & ($1, 4, 4, 5, 5, 6, 6, 6, 6, 6, 6, 4, 1$) & ($1, 4, 4, 5, 5, 6, 6, 6, 6, 6, 6, 4, 1$)\\ \hline
-			$Sin$ & ($1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1$) & ($1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1$)\\ \hline
-			$ISR$ &($1, 4, 7, 8, 8, 8, 8, 8, 8, 8, 7, 4, 1$)&($1, 4, 7, 8, 8, 8, 8, 8, 8, 8, 7, 4, 1$)\\ \hline
-			$ICR$ &($1, 4, 8, 9, 10, 10, 10, 10, 10, 9, 8, 4, 1$)&($1, 4, 8, 9, 10, 10, 10, 10, 10, 9, 8, 4, 1$)\\ \hline
-			$IPR$ &($1, 4, 10, 12, 12, 12, 13, 12, 12, 12, 10, 4, 1$)&($1, 4, 10, 12, 12, 13, 13, 12, 12, 12, 10, 4, 1$)\\ \hline
-		\end{tabular}
+		{\scriptsize\begin{tabular}{|c|c|c|}
+				\hline
+				&\otta ranks & \hthird ranks\\
+				& ($r_0,r_1,\cdots, r_{12}$) & ($r_0,r_1,\cdots, r_{12}$)\\ \hline
+				$Log$ & ($1, 4, 4, 5, 5, 6, 6, 6, 6, 6, 6, 4, 1$) & ($1, 4, 4, 5, 5, 6, 6, 6, 6, 6, 6, 4, 1$)\\ \hline
+				$Sin$ & ($1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1$) & ($1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1$)\\ \hline
+				$ISR$ &($1, 4, 7, 8, 8, 8, 8, 8, 8, 8, 7, 4, 1$)&($1, 4, 7, 8, 8, 8, 8, 8, 8, 8, 7, 4, 1$)\\ \hline
+				$ICR$ &($1, 4, 8, 9, 10, 10, 10, 10, 10, 9, 8, 4, 1$)&($1, 4, 8, 9, 10, 10, 10, 10, 10, 9, 8, 4, 1$)\\ \hline
+				$IPR$ &($1, 4, 10, 12, 12, 12, 13, 12, 12, 12, 10, 4, 1$)&($1, 4, 10, 12, 12, 13, 13, 12, 12, 12, 10, 4, 1$)\\ \hline
+		\end{tabular}}
 		\caption{Tensor Train ranks for prescribed accuracy of $10^{-6}$.\label{tab:12-dim-ranks-e-6}}
 	\end{center}
 \end{table}
@@ -1223,85 +1264,87 @@ Similar to the previous subsection, here we aim for approximations with error no
 %%\begin{tabular}{@{}c@{}}SVD \\ Max Rank=\end{tabular}
 \begin{table}[htb]
 	\begin{center}
-	\begin{tabular}{|c|c|c|c|c|c|c|}
-		%%		\toprule
-		\hline
-		Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
-%%		\multirow{4}{*} {SVD} 
-%%		& Max rank & 5         & 1         & 7         & 9         & 12 \\ \cline{2-7}
-%%		& compr    & 99.994    & 100.000   & 99.989    & 99.983    & 99.970 \\ \cline{2-7}
-%%		& ne       & 992       & 48        & 1824      & 2912      & 5024 \\ \cline{2-7}
-%%		& OA       & 6.079e-06 & 2888.3    & 2.376e-06 & 1.279e-06 & 5.525e-07 \\ \cline{1-7} 
-%%		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP+ \\SVD\end{tabular}} 
-%%		& Max rank & 5         & 1         & 7         & 9         & 12 \\ \cline{2-7}
-%%		& compr    & 99.994    & 100.000   & 99.989    & 99.983    & 99.970 \\ \cline{2-7}
-%%		& ne       & 992       & 48        & 1824      & 2912      & 5024 \\ \cline{2-7}
-%%		& OA       & 1.384e-05 & 2888.3    & 1.687e-05 & 5.902e-06 & 3.299e-06 \\ \cline{1-7}
-		\multirow{4}{*} {SVD}
-		& Max rank & 6         & 2         & 8         & 10        & 13 \\ \cline{2-7}
-		& compr    & 99.992    & 99.999    & 99.986    & 99.979    & 99.965 \\ \cline{2-7}
-		& ne       & 1376      & 176       & 2336      & 3552      & 5856 \\ \cline{2-7}
-		& OA       & 1.340e-07 & 2.615e-09 & 1.744e-07 & 1.328e-07 & 8.592e-08 \\ \cline{1-7}
-		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP+ \\SVD\end{tabular}}
-		& Max rank & 6         & 2         & 8         & 10        & 13 \\ \cline{2-7}
-		& compr    & 99.992    & 99.999    & 99.986    & 99.979    & 99.965 \\ \cline{2-7}
-		& ne       & 1376      & 176       & 2336      & 3552      & 5856 \\ \cline{2-7}
-		& OA       & 5.737e-07 & 2.277e-10 & 6.286e-07 & 4.117e-07 & 3.516e-07 \\ \cline{1-7}
-		\multirow{4}{*} {SVD}
-		& Max rank & 7         & 3         & 9         & 11        & 14 \\ \cline{2-7}
-		& compr    & 99.989    & 99.998    & 99.983    & 99.975    & 99.960 \\ \cline{2-7}
-		& ne       & 1824      & 384       & 2912      & 4256      & 6752 \\ \cline{2-7}
-		& OA       & 2.279e-08 & 3.467e-09 & 1.147e-08 & 1.219e-08 & 1.394e-08 \\ \cline{1-7}
-		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP+ \\SVD\end{tabular}} 
-		& Max rank & 7         & 3         & 9         & 11        & 14 \\ \cline{2-7}
-		& compr    & 99.989    & 99.998    & 99.983    & 99.975    & 99.960 \\ \cline{2-7}
-		& ne       & 1824      & 384       & 2912      & 4256      & 6752 \\ \cline{2-7}
-		& OA       & 1.167e-08 & 1.428e-10 & 4.331e-08 & 4.926e-08 & 8.778e-08 \\ \cline{1-7}
-	\end{tabular}
-	\caption{Comparison of SVD and QRCP+SVD for fixed ranks with \otta tree.~\label{tab:svd-qrcp+svd-seq-e-06}}
+		{\footnotesize\begin{tabular}{|c|c|c|c|c|c|c|}
+				%%		\toprule
+				\hline
+				Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
+				%%		\multirow{4}{*} {SVD} 
+				%%		& Max rank & 5         & 1         & 7         & 9         & 12 \\ \cline{2-7}
+				%%		& compr    & 99.994    & 100.000   & 99.989    & 99.983    & 99.970 \\ \cline{2-7}
+				%%		& ne       & 992       & 48        & 1824      & 2912      & 5024 \\ \cline{2-7}
+				%%		& OA       & 6.079e-06 & 2888.3    & 2.376e-06 & 1.279e-06 & 5.525e-07 \\ \cline{1-7} 
+				%%		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP \\+SVD\end{tabular}} 
+				%%		& Max rank & 5         & 1         & 7         & 9         & 12 \\ \cline{2-7}
+				%%		& compr    & 99.994    & 100.000   & 99.989    & 99.983    & 99.970 \\ \cline{2-7}
+				%%		& ne       & 992       & 48        & 1824      & 2912      & 5024 \\ \cline{2-7}
+				%%		& OA       & 1.384e-05 & 2888.3    & 1.687e-05 & 5.902e-06 & 3.299e-06 \\ \cline{1-7}
+				\multirow{4}{*} {SVD}
+				& Max rank & 6         & 2         & 8         & 10        & 13 \\ \cline{2-7}
+				& compr    & 99.992    & 99.999    & 99.986    & 99.979    & 99.965 \\ \cline{2-7}
+				& ne       & 1376      & 176       & 2336      & 3552      & 5856 \\ \cline{2-7}
+				& OA       & 1.340e-07 & 2.615e-09 & 1.744e-07 & 1.328e-07 & 8.592e-08 \\ \cline{1-7}
+				\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP \\+SVD\end{tabular}}
+				& Max rank & 6         & 2         & 8         & 10        & 13 \\ \cline{2-7}
+				& compr    & 99.992    & 99.999    & 99.986    & 99.979    & 99.965 \\ \cline{2-7}
+				& ne       & 1376      & 176       & 2336      & 3552      & 5856 \\ \cline{2-7}
+				& OA       & 5.737e-07 & 2.277e-10 & 6.286e-07 & 4.117e-07 & 3.516e-07 \\ \cline{1-7}
+				\multirow{4}{*} {SVD}
+				& Max rank & 7         & 3         & 9         & 11        & 14 \\ \cline{2-7}
+				& compr    & 99.989    & 99.998    & 99.983    & 99.975    & 99.960 \\ \cline{2-7}
+				& ne       & 1824      & 384       & 2912      & 4256      & 6752 \\ \cline{2-7}
+				& OA       & 2.279e-08 & 3.467e-09 & 1.147e-08 & 1.219e-08 & 1.394e-08 \\ \cline{1-7}
+				\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP \\+SVD\end{tabular}} 
+				& Max rank & 7         & 3         & 9         & 11        & 14 \\ \cline{2-7}
+				& compr    & 99.989    & 99.998    & 99.983    & 99.975    & 99.960 \\ \cline{2-7}
+				& ne       & 1824      & 384       & 2912      & 4256      & 6752 \\ \cline{2-7}
+				& OA       & 1.167e-08 & 1.428e-10 & 4.331e-08 & 4.926e-08 & 8.778e-08 \\ \cline{1-7}
+		\end{tabular}}
+		\caption{Comparison of SVD and QRCP+SVD for fixed ranks with \otta tree.~\label{tab:svd-qrcp+svd-seq-e-06}}
 	\end{center}
 \end{table}
 
 
 \begin{table}[htb]
 	\begin{center}
-	\begin{tabular}{|c|c|c|c|c|c|c|}
-		%%		\toprule
-		\hline
-		Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
-		\multirow{4}{*} {SVD}
-%%		& Max rank & 5         & 1         & 7         & 9         & 12 \\ \cline{2-7}
-%%		& compr    & 99.994    & 100.000   & 99.989    & 99.983    & 99.970 \\ \cline{2-7}
-%%		& ne       & 992       & 48        & 1824      & 2912      & 5024 \\ \cline{2-7}
-%%		& OA       & 6.079e-06 & 2888.2    & 2.376e-06 & 1.279e-06 & 5.525e-07 \\ \cline{1-7} 
-%%		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP+ \\SVD\end{tabular}}
-%%		& Max rank & 5         & 1         & 7         & 9         & 12 \\ \cline{2-7}
-%%		& compr    & 99.994    & 100.000   & 99.989    & 99.983    & 99.970 \\ \cline{2-7}
-%%		& ne       & 992       & 48        & 1824      & 2912      & 5024 \\ \cline{2-7}
-%%		& OA       & 1.016e-05 & 2888.4    & 7.072e-06 & 8.380e-06 & 1.419e-06 \\ \cline{1-7}
-		\multirow{4}{*} {SVD}
-		& Max rank & 6         & 2         & 8         & 10        & 13 \\ \cline{2-7}
-		& compr    & 99.992    & 99.999    & 99.986    & 99.979    & 99.965 \\ \cline{2-7}
-		& ne       & 1376      & 176       & 2336      & 3552      & 5856 \\ \cline{2-7}
-		& OA       & 1.323e-07 & 1.252e-11 & 1.744e-07 & 1.328e-07 & 8.590e-08 \\ \cline{1-7}
-		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP+ \\SVD\end{tabular}}
-		& Max rank & 6         & 2         & 8         & 10        & 13 \\ \cline{2-7}
-		& compr    & 99.992    & 99.999    & 99.986    & 99.979    & 99.965 \\ \cline{2-7}
-		& ne       & 1376      & 176       & 2336      & 3552      & 5856 \\ \cline{2-7}
-		& OA       & 3.555e-07 & 7.338e-12 & 3.399e-07 & 2.854e-07 & 1.397e-07 \\ \cline{1-7}
-		\multirow{4}{*} {SVD}
-		& Max rank & 7         & 3         & 9         & 11        & 14 \\ \cline{2-7}
-		& compr    & 99.989    & 99.998    & 99.983    & 99.975    & 99.960 \\ \cline{2-7}
-		& ne       & 1824      & 384       & 2912      & 4256      & 6752 \\ \cline{2-7}
-		& OA       & 2.753e-09 & 2.177e-11 & 1.147e-08 & 1.214e-08 & 1.387e-08 \\ \cline{1-7} 
-		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP+ \\SVD\end{tabular}}
-		& Max rank & 7         & 3         & 9         & 11        & 14 \\ \cline{2-7}
-		& compr    & 99.989    & 99.998    & 99.983    & 99.975    & 99.960 \\ \cline{2-7}
-		& ne       & 1824      & 384       & 2912      & 4256      & 6752 \\ \cline{2-7}
-		& OA       & 6.620e-09 & 6.732e-12 & 1.910e-08 & 2.732e-08 & 3.017e-08 \\ \cline{1-7} 
-	\end{tabular}
-	\caption{Comparison of SVD and QRCP+SVD for fixed ranks with \hthird tree.~\label{tab:svd-qrcp+svd-parallel-e-06}}
+		{\footnotesize\begin{tabular}{|c|c|c|c|c|c|c|}
+				%%		\toprule
+				\hline
+				Appr. & Metric & $Log$ & $Sin$ & $ISR$ & $ICR$ & $IPR$\\ \hline
+				%%			\multirow{4}{*} {SVD}
+				%%		& Max rank & 5         & 1         & 7         & 9         & 12 \\ \cline{2-7}
+				%%		& compr    & 99.994    & 100.000   & 99.989    & 99.983    & 99.970 \\ \cline{2-7}
+				%%		& ne       & 992       & 48        & 1824      & 2912      & 5024 \\ \cline{2-7}
+				%%		& OA       & 6.079e-06 & 2888.2    & 2.376e-06 & 1.279e-06 & 5.525e-07 \\ \cline{1-7} 
+				%%		\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP \\+SVD\end{tabular}}
+				%%		& Max rank & 5         & 1         & 7         & 9         & 12 \\ \cline{2-7}
+				%%		& compr    & 99.994    & 100.000   & 99.989    & 99.983    & 99.970 \\ \cline{2-7}
+				%%		& ne       & 992       & 48        & 1824      & 2912      & 5024 \\ \cline{2-7}
+				%%		& OA       & 1.016e-05 & 2888.4    & 7.072e-06 & 8.380e-06 & 1.419e-06 \\ \cline{1-7}
+				\multirow{4}{*} {SVD}
+				& Max rank & 6         & 2         & 8         & 10        & 13 \\ \cline{2-7}
+				& compr    & 99.992    & 99.999    & 99.986    & 99.979    & 99.965 \\ \cline{2-7}
+				& ne       & 1376      & 176       & 2336      & 3552      & 5856 \\ \cline{2-7}
+				& OA       & 1.323e-07 & 1.252e-11 & 1.744e-07 & 1.328e-07 & 8.590e-08 \\ \cline{1-7}
+				\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP \\+SVD\end{tabular}}
+				& Max rank & 6         & 2         & 8         & 10        & 13 \\ \cline{2-7}
+				& compr    & 99.992    & 99.999    & 99.986    & 99.979    & 99.965 \\ \cline{2-7}
+				& ne       & 1376      & 176       & 2336      & 3552      & 5856 \\ \cline{2-7}
+				& OA       & 3.555e-07 & 7.338e-12 & 3.399e-07 & 2.854e-07 & 1.397e-07 \\ \cline{1-7}
+				\multirow{4}{*} {SVD}
+				& Max rank & 7         & 3         & 9         & 11        & 14 \\ \cline{2-7}
+				& compr    & 99.989    & 99.998    & 99.983    & 99.975    & 99.960 \\ \cline{2-7}
+				& ne       & 1824      & 384       & 2912      & 4256      & 6752 \\ \cline{2-7}
+				& OA       & 2.753e-09 & 2.177e-11 & 1.147e-08 & 1.214e-08 & 1.387e-08 \\ \cline{1-7} 
+				\multirow{4}{*} {\begin{tabular}{@{}c@{}}QRCP \\+SVD\end{tabular}}
+				& Max rank & 7         & 3         & 9         & 11        & 14 \\ \cline{2-7}
+				& compr    & 99.989    & 99.998    & 99.983    & 99.975    & 99.960 \\ \cline{2-7}
+				& ne       & 1824      & 384       & 2912      & 4256      & 6752 \\ \cline{2-7}
+				& OA       & 6.620e-09 & 6.732e-12 & 1.910e-08 & 2.732e-08 & 3.017e-08 \\ \cline{1-7} 
+		\end{tabular}}
+		\caption{Comparison of SVD and QRCP+SVD for fixed ranks with \hthird tree.~\label{tab:svd-qrcp+svd-parallel-e-06}}
 	\end{center}
 \end{table}
+%%\balance
 Tables~\ref{tab:svd-qrcp+svd-seq-e-03}, ~\ref{tab:svd-qrcp+svd-parallel-e-03}, \ref{tab:svd-qrcp+svd-seq-e-06}, and \ref{tab:svd-qrcp+svd-parallel-e-06} exhibit that acuuracies of the approximations obtained by QRCP+SVD approach are comparable with the SVD approach for \otta as well as \hthird methods. 
+\newpage
 \end{document}
