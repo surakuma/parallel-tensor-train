@@ -40,7 +40,7 @@ This repository discusses parallel and scalable tensor train decomposition techi
     compression_ratio_percentage =  81.250
     ans =  4.4020
 
-    >> G3qrsvd = parallelTensorTrainCompression_h3_gFixedRankQRCPSVD(A, r);
+    >> G3qrsvd = parallelTensorTrainCompressionLSBFixedRankQRCPSVD(A, r);
     >> approx_error = computeError(A, G3qrsvd)
     Core tensor size = 1 X 4 X 2
     Core tensor size = 2 X 4 X 2
