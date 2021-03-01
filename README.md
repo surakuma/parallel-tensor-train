@@ -2,12 +2,13 @@
 This repository discusses parallel and scalable tensor train decomposition techiniques for high dimensional tensors. Presently parallel algorithms are implemented in Matlab. Distributed memory implementations of the parallel algorithms in C++ are currently underway.
 
 We proposed mainly 4 approaches to obtain tensor train approximations of high dimensional tensors. These are
-  i)    STTA
-  ii)   LSR
-  iii)  SLSB
-  iv)   LSB
-  
- STTA is a sequential approach, while others are parallel. We refer the user to our [paper](https://hal.inria.fr/hal-03081555) for more details about these approaches.
+1. STTA
+2. LSR
+3. SLSB
+4. LSB
+
+
+STTA is a sequential approach, while others are parallel. We refer the user to our [paper](https://hal.inria.fr/hal-03081555) for more details about these approaches.
  
 
 
