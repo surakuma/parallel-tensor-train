@@ -1,11 +1,23 @@
 # parallel-tensor-train
-This repository discusses parallel and scalable tensor train decomposition techiniques for high dimensional tensors. Presently parallel algorithms are implemented in Matlab. Distributed memory implementations of the parallel algorithms in C++ are currently underway. 
+This repository discusses parallel and scalable tensor train decomposition techiniques for high dimensional tensors. Presently parallel algorithms are implemented in Matlab. Distributed memory implementations of the parallel algorithms in C++ are currently underway.
+
+We proposed mainly 4 approaches to obtain tensor train approximations of high dimensional tensors. These are
+  i)    STTA
+  ii)   LSR
+  iii)  SLSB
+  iv)   LSB
+  
+ STTA is a sequential approach, while others are parallel. We refer the user to our [paper](https://hal.inria.fr/hal-03081555) for more details about these approaches.
+ 
 
 
 ## How to run code of this repository?
 
 ## Requirements (Matlab code)
 * Matlab/Octave
+
+### Enter into the structured folder (all matlab files are in this directory)
+    >> cd structured
 
 ### Rank based examples
 
