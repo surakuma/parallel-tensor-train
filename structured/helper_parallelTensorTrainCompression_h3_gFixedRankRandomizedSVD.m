@@ -28,9 +28,11 @@ function [G INVS] = helper_parallelTensorTrainCompression_h3_gFixedRankRandomize
     %INVS{dims_identity(d_half:d_half)} = 1./diag(S);
     %INVS = 1./diag(S);
 
+    error_at_this_step = norm(C-U*S*transpose(V), "fro")
 
-    [G1 INVS1] = helper_parallelTensorTrainCompression_h3_gFixedRankQRCPSVD(r1, U*S, r, dims(1:d_half), dims_identity(1:d_half), fixed_rank);
-    [G2 INVS2] = helper_parallelTensorTrainCompression_h3_gFixedRankQRCPSVD(r, S*V', r2, dims(d_half+1:d), dims_identity(d_half+1:d), fixed_rank);
+
+    [G1 INVS1] = helper_parallelTensorTrainCompression_h3_gFixedRankRandomizedSVD(r1, U*S, r, dims(1:d_half), dims_identity(1:d_half), fixed_rank);
+    [G2 INVS2] = helper_parallelTensorTrainCompression_h3_gFixedRankRandomizedSVD(r, S*V', r2, dims(d_half+1:d), dims_identity(d_half+1:d), fixed_rank);
 
     G = {G1{1:dims_identity(d_half)}, G2{dims_identity(d_half+1:d)}};
     INVS = {INVS1{1:length(INVS1)}, 1./(diag(S)'), INVS2{1:length(INVS2)}};
