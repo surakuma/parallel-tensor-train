@@ -14,9 +14,17 @@ function [U S V] = randomized_svd(A, r)
 
     q=5;
     q=0;
+    %% power scheme method to select Q
+    %% for k=1:q:1
+    %% Y = transpose(A)*Y;
+    %% Y = A*Y;
+    %% end
+
+    %% subspace iteration method to select Q
     for k=1:q:1
-    Y = transpose(A)*Y;
-    Y = A*Y;
+    [Q ~] = qr(Y,0);
+    [Q ~] = qr(transpose(A)*Q,0);
+    Y = A*Q;
     end
 
     [Q ~] = qr(Y,0);
