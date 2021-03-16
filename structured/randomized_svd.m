@@ -1,7 +1,7 @@
 function [U S V] = randomized_svd(A, r)
     [rows columns] = size(A);
 
-    p = 5;
+    p = 10;
     p = 2;
     l = r+p;
     l = min(l, min(rows, columns));
@@ -12,7 +12,8 @@ function [U S V] = randomized_svd(A, r)
 
     Y = A*RS;
 
-    q=1;
+    q=5;
+    q=0;
     for k=1:q:1
     Y = transpose(A)*Y;
     Y = A*Y;
