@@ -168,6 +168,11 @@ STTA is a sequential approach, while others are parallel. We refer the user to o
 
    
 
+/***** Implementations based on lapack and scalapack calls are in progress ******/
+
 ## Requirements (C++ sequential code)
 * LAPACK
 * BLAS
+
+## Requirements (C++ parallel code)
+* Scalapack
