@@ -5,6 +5,8 @@
 #include "mpi.h"
 
 #include <random>
+#include <vector>
+
 
 
 using namespace std;
@@ -15,6 +17,29 @@ extern "C" {
 extern int dgemm_(const char* TRANSA, const char* TRANSB, const int* M, const int* N, const int* K,
                   const double* ALPHA, const double* A, const int* LDA, const double* B,
           const int* LDB, const double* BETA, double* C, const int* LDC);
+}
+
+rearrange_data(gathered_data, number_of_my_rows, required_rank, nproc_col);
+
+template <class T>
+void rearrange_data(T* data, int nrows_per_block, int ncols_per_block, int ncols)
+{
+    T* tmp = new T [nrows_per_block * ncols_per_block * ncols];
+    memcpy(tmp, data, nrows_per_block * ncols_per_block * ncols 8 sizeof(T));
+
+    for(int icol_per_block =0; icol_per_block <ncols_per_block; icol_per_block++)
+    {
+        for(int icol=0; icol<ncols; icol++)
+        {
+            //TODO: check this computation
+            int prev_offset = icol * nrows_per_block * ncols_per_block + icol_per_block * nrows_per_block ;
+            int curr_offset = icol_per_block * nrows_per_block * ncols + icol * nrows_per_block; 
+            memcpy(&gathered_data[curr_offset], &tmp[prev_offset], ncols_per_block*sizeof(T));
+        }
+
+    }
+
+    delete [] tmp;
 }
 
 int main(int argc, char* argv[])
@@ -141,12 +166,54 @@ int main(int argc, char* argv[])
 
 
     //perform MPI reduce operation
+    
+    MPI_Comm row_comm;
+    MPI_Comm_split(MPI_COMM_WORLD, rank_row, rank, &row_comm);
+
+
+    double *row_reduced_data = new double [number_of_my_rows * required_rank];
+    MPI_Reduce(output_after_rand_matrix, row_reduced_data, number_of_my_rows * required_rank, MPI_DOUBLE, MPI_SUM, 0, row_comm);
+
+    MPI_Barrier(row_comm);
+    MPI_Comm_free(&row_comm);
     //perform gather operation and rearrange the data (also look at MPI_Gatherv)
-    //Apply QR
+
+    if(rank == 0)
+    {
+        double *gathered_data = new double [number_of_my_rows * required_rank * nproc_col];
+        std::vector<int> recv_counts;
+        std::vector<int> displacements;
+        //int recv_counts = new int [nprocess];
+
+        int offset = 0;
+        for(int iprocess =0; iprocess <nprocess; iprocess++)
+        {
+            int val =0;
+            if(iprocess / nproc_row == 0)
+                val =number_of_my_rows * required_rank;
+            recv_counts.push_back(val);
+            displacements.push_back(offset);
+            offset += val;
+        }
+
+        MPI_Gatherv(row_reduced_data, number_of_my_rows * required_rank , MPI_DOUBLE, gathered_data, recv_counts.data(), displacement.data(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+        //rearrange the combined data in row major order
+        rearrange_data(gathered_data, number_of_my_rows, required_rank, nproc_col);
+        //Apply QR
+
+        delete [] gathered_data;
+    }
+    else
+    {
+        MPI_Gatherv(row_reduced_data, number_of_my_rows * required_rank , MPI_DOUBLE, nullptr, nullptr, nullptr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    }
+
     //perform svd of Q^T A
     //Multiply results with Q
 
 
+    delete [] row_reduced_data;
     delete [] output_after_rand_matrix;
     delete [] rand_matrix;
 
