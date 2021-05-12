@@ -41,7 +41,24 @@ void rearrange_data(T* data, int nrows_per_block, int ncols_per_block, int ncols
 
     delete [] tmp;
 }
+//Perform A^T(1:n1, 1:m1)*B(1:m2, 1:n2)
+double* multiplyPortionofATwithB(double *A, int m1, int n1, const int& lda, double *B, int m2, int n2)
+{
+    assert(m1 == m2);
+    double *output = new double[n1*n2];
+    
+    int ldb = m2;
+    int ldc = n1;
 
+    char transA = 'T';
+    char transB = 'N';
+    double alpha = 1.0;
+    double beta = 0.0;
+
+    dgemm_(&transA, &transB, &n1, &n2, &m1, &alpha, A, &lda, B, &ldb, &beta, output, &ldc);
+    //dgemm_(&trans, &trans, &number_of_my_rows, &required_rank, &number_of_my_columns, &alpha, our_data, &lda, rand_matrix, &ldb, &beta, output_after_rand_matrix, &ldc);
+    return output;
+}
 int main(int argc, char* argv[])
 {
 
