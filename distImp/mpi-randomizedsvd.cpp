@@ -7,11 +7,7 @@
 #include <random>
 #include <vector>
 
-
-
 using namespace std;
-
-
 
 extern "C" {
 extern int dgemm_(const char* TRANSA, const char* TRANSB, const int* M, const int* N, const int* K,
@@ -19,7 +15,6 @@ extern int dgemm_(const char* TRANSA, const char* TRANSB, const int* M, const in
           const int* LDB, const double* BETA, double* C, const int* LDC);
 }
 
-rearrange_data(gathered_data, number_of_my_rows, required_rank, nproc_col);
 
 template <class T>
 void rearrange_data(T* data, int nrows_per_block, int ncols_per_block, int ncols)
@@ -42,7 +37,7 @@ void rearrange_data(T* data, int nrows_per_block, int ncols_per_block, int ncols
     delete [] tmp;
 }
 //Perform A^T(1:n1, 1:m1)*B(1:m2, 1:n2)
-double* multiplyPortionofATwithB(double *A, int m1, int n1, const int& lda, double *B, int m2, int n2)
+double* multiplyPortionofATwithB(double *A, const int& m1, const int& n1, const int& lda, double *B, const int& m2, const int& n2)
 {
     assert(m1 == m2);
     double *output = new double[n1*n2];
@@ -59,6 +54,64 @@ double* multiplyPortionofATwithB(double *A, int m1, int n1, const int& lda, doub
     //dgemm_(&trans, &trans, &number_of_my_rows, &required_rank, &number_of_my_columns, &alpha, our_data, &lda, rand_matrix, &ldb, &beta, output_after_rand_matrix, &ldc);
     return output;
 }
+
+
+double* reduceAlongColsAndGather(MPI_Comm original_comm, int nproc_row, int nproc_col, double *local_data, int nrows, int ncols)
+{
+    int rank, nprocess;
+    MPI_Comm_rank(original_comm, &rank);
+    MPI_Comm_size(original_comm, &nprocess);
+
+    assert(nprocess == nproc_row * nproc_col);
+
+
+    int rank_row = rank % nproc_row;
+    int rank_col = rank / nproc_row;
+
+    MPI_Comm col_comm;
+    MPI_Comm_split(original_comm, rank_col, rank, &col_comm);
+
+    double *col_reduced_data = new double [nrows*ncols];
+    MPI_Reduce(local_data, col_reduced_data, nrows*ncols, MPI_DOUBLE, MPI_SUM, 0, col_comm);
+
+    MPI_Barrier(col_comm);
+    MPI_Comm_free(&col_comm);
+    
+    double *output = nullptr;
+    if(rank == 0)
+    {
+        double *output = new double [nrows*ncols*nproc_col];
+        std::vector<int> recv_counts;
+        std::vector<int> displacements;
+        //int recv_counts = new int [nprocess];
+
+        int val =0;
+        int offset = 0;
+        for(int iprocess =0; iprocess <nprocess; iprocess++)
+        {
+            if(iprocess % nproc_row == 0)
+                val = nrows*ncols;
+            recv_counts.push_back(val);
+            displacements.push_back(offset);
+            offset += val;
+        }
+
+        MPI_Gatherv(col_reduced_data, nrows*ncols, MPI_DOUBLE, output, recv_counts.data(), displacement.data(), MPI_DOUBLE, 0, original_comm);
+
+    }
+    else
+    {
+        MPI_Gatherv(col_reduced_data, nrows*ncols, MPI_DOUBLE, nullptr, nullptr, nullptr, MPI_DOUBLE, 0, original_comm);
+    }
+
+
+    delete [] col_reduced_data;
+
+    return output;
+
+}
+
+
 int main(int argc, char* argv[])
 {
 
@@ -195,17 +248,18 @@ int main(int argc, char* argv[])
     MPI_Comm_free(&row_comm);
     //perform gather operation and rearrange the data (also look at MPI_Gatherv)
 
+    double *qfactor;
     if(rank == 0)
     {
-        double *gathered_data = new double [number_of_my_rows * required_rank * nproc_col];
+        double *gathered_data = new double [number_of_my_rows * required_rank * nproc_row];
         std::vector<int> recv_counts;
         std::vector<int> displacements;
         //int recv_counts = new int [nprocess];
 
+        int val =0;
         int offset = 0;
         for(int iprocess =0; iprocess <nprocess; iprocess++)
         {
-            int val =0;
             if(iprocess / nproc_row == 0)
                 val =number_of_my_rows * required_rank;
             recv_counts.push_back(val);
@@ -216,8 +270,9 @@ int main(int argc, char* argv[])
         MPI_Gatherv(row_reduced_data, number_of_my_rows * required_rank , MPI_DOUBLE, gathered_data, recv_counts.data(), displacement.data(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
         //rearrange the combined data in row major order
-        rearrange_data(gathered_data, number_of_my_rows, required_rank, nproc_col);
-        //Apply QR
+        rearrange_data(gathered_data, number_of_my_rows, required_rank, nproc_row);
+        //Apply QR (Q would be in input variable)
+        qfactor = computeQ(gathered_data, number_of_my_rows*nproc_row, required_rank);
 
         delete [] gathered_data;
     }
@@ -226,13 +281,56 @@ int main(int argc, char* argv[])
         MPI_Gatherv(row_reduced_data, number_of_my_rows * required_rank , MPI_DOUBLE, nullptr, nullptr, nullptr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     }
 
-    //perform svd of Q^T A
-    //Multiply results with Q
-
-
     delete [] row_reduced_data;
     delete [] output_after_rand_matrix;
     delete [] rand_matrix;
+
+    if(rank != 0)
+        qfactor = new double [number_of_my_rows * required_rank * nproc_row];
+
+    MPI_Bcast(qfactor, number_of_my_rows * required_rank * nproc_row, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    //perform Q^T A
+    int qta_lda = number_of_my_rows * nproc_row;
+    double *qta_local = multiplyPortionofATwithB(&qfactor[number_of_my_rows * rank_row], number_of_my_rows, required_rank, qta_lda, our_data, number_of_my_rows, number_of_my_cols); 
+
+
+    double qta_combined_on_root = reduceAlongColsAndGather(MPI_COMM_WORLD, nproc_row, nproc_col, qta_local, required_rank, number_of_my_cols);
+
+
+
+    if(rank == 0)
+    {
+        //process qfactor and qta_combined_on_root
+        //svd of qta_combined_on_root
+
+        int nrows = required_rank;
+        int ncols = nproc_col *number_of_my_cols;
+        double *U=nullptr;
+        double *S=nullptr;
+        double *VT=nullptr;
+
+        computesvd(U, S, VT, qta_combined_on_root, nrows, ncols);
+
+        double *combinedU = multiply(qfactor, number_of_my_rows*nproc_row, required_rank, U, nrows, nrows);
+
+        delete [] U;
+
+        U = combinedU;
+
+        delete [] qta_combined_on_root;
+    }
+    else
+        assert(qta_combined_on_root == nullptr);
+
+
+    //delete qmatrix from all processors
+    delete [] qfactor;
+    //delete local data
+    delete [] our_data;
+
+    //perform svd of Q^T A
+    //Multiply results with Q
 
 
     //multily every block with a random matrix of size
