@@ -6,10 +6,54 @@
 
 #include <random>
 #include <vector>
+#include <algorithm>
+#include <vector>
+
 
 using namespace std;
 
 extern "C" {
+
+
+extern int dgesvd_(char&   JOBU, // [in] 
+        char&   JOBVT, // [in]
+        int& M, // [in] number of rows
+        int& N, // [in] number of columns
+        double *A, // [in,out] A is DOUBLE PRECISION array
+        int& LDA, // [in] leading dimension of the array A
+        double* S, // [out] singular values of A, sorted so that S(i) >= S(i+1)
+        double *U, // [out] left singular vectors
+        int& LDU, // [in] leading dimension of the array U
+        double* VT, // [out] right singular vectors
+        int& LDVT, // [in] leading dimension of the array VT
+        double* work,
+        int& lwork, // [in] To be safe >= 4* min(M,N) * min(M, N) + 7* min(M, N)
+        int& info);
+
+
+  extern int dgeqrf_(int const & M,
+          int const & N,
+          double*  A,
+          int const & LDA,
+          double*  TAU,
+          double* WORK,
+          int const& LWORK,
+          int & info);
+
+
+  extern int dorgqr_(int const& M, //The number of rows of the matrix Q. M >= 0
+          int const& N, //The number of columns of the matrix Q. M >= N >= 0
+          int const& K, //The number of elementary reflectors whose product defines the
+                        //matrix Q. N >= K >= 0
+          double* A,    // The matrix returned by DGEQRF in the first k columns
+          int const& LDA, //The first dimension of the array A. LDA >= max(1,M)
+          double * TAU, // the scalar factor of the elementary reflector H(i)
+          double *WORK, // double precision array with dimension (MAX(1,LWORK))
+          int const& LWORK, //LWORK >= max(1,N), for optimum performance LWORK >= N*NB
+          int & info);
+
+
+
 extern int dgemm_(const char* TRANSA, const char* TRANSB, const int* M, const int* N, const int* K,
                   const double* ALPHA, const double* A, const int* LDA, const double* B,
           const int* LDB, const double* BETA, double* C, const int* LDC);
@@ -20,7 +64,7 @@ template <class T>
 void rearrange_data(T* data, int nrows_per_block, int ncols_per_block, int ncols)
 {
     T* tmp = new T [nrows_per_block * ncols_per_block * ncols];
-    memcpy(tmp, data, nrows_per_block * ncols_per_block * ncols 8 sizeof(T));
+    memcpy(tmp, data, nrows_per_block * ncols_per_block * ncols * sizeof(T));
 
     for(int icol_per_block =0; icol_per_block <ncols_per_block; icol_per_block++)
     {
@@ -29,7 +73,7 @@ void rearrange_data(T* data, int nrows_per_block, int ncols_per_block, int ncols
             //TODO: check this computation
             int prev_offset = icol * nrows_per_block * ncols_per_block + icol_per_block * nrows_per_block ;
             int curr_offset = icol_per_block * nrows_per_block * ncols + icol * nrows_per_block; 
-            memcpy(&gathered_data[curr_offset], &tmp[prev_offset], ncols_per_block*sizeof(T));
+            memcpy(&data[curr_offset], &tmp[prev_offset], ncols_per_block*sizeof(T));
         }
 
     }
@@ -96,7 +140,7 @@ double* reduceAlongColsAndGather(MPI_Comm original_comm, int nproc_row, int npro
             offset += val;
         }
 
-        MPI_Gatherv(col_reduced_data, nrows*ncols, MPI_DOUBLE, output, recv_counts.data(), displacement.data(), MPI_DOUBLE, 0, original_comm);
+        MPI_Gatherv(col_reduced_data, nrows*ncols, MPI_DOUBLE, output, recv_counts.data(), displacements.data(), MPI_DOUBLE, 0, original_comm);
 
     }
     else
@@ -111,6 +155,62 @@ double* reduceAlongColsAndGather(MPI_Comm original_comm, int nproc_row, int npro
 
 }
 
+void computesvd(double* &U, double* &S, double* &VT, double* input, int m, int n)
+{
+    int minmn = min(m,n);
+
+	char schar='S';
+    U = new double [m*minmn];
+    S = new double [minmn];
+    VT = new double [minmn * n];
+
+    int lda = m;
+    int ldu = m;
+    int ldvt = minmn;
+    int lwork = 10*minmn + max(m,n);
+    int info;
+    vector<double> work(lwork);
+
+
+    dgesvd_(schar, schar, m, n, input, lda, S, U, ldu, VT, ldvt, work.data(), lwork, info);
+}
+
+
+double* multiply(double* input1, const int &m1, const int&n1, double* input2, const int &m2, const int &n2)
+{
+    assert(n1 == m2);
+
+    double *output = new double[m1*n2];
+
+    int lda = m1;
+    int ldb = m2;
+    int ldc = m1;
+    char trans = 'N';
+
+    double alpha = 1.0;
+    double beta = 0.0;
+
+    dgemm_(&trans, &trans, &m1, &n2, &n1, &alpha, input1, &lda, input2, &ldb, &beta, output, &ldc);
+    return output;
+}
+
+
+//inplace computation when m >= n
+double* computeQ(double *A, int m, int n)
+{
+    double *copyA = new double [m*n];
+    int lda = m;
+    vector<double> tau(min(m,n));
+    int lwork = n*n;
+    vector<double> work(lwork);
+    int info;
+
+    dgeqrf_(m, n, copyA, m, tau.data(), work.data(), lwork, info);
+    
+    dorgqr_(m, n, n, copyA, m, tau.data(), work.data(), lwork, info);
+
+    return copyA;
+}
 
 int main(int argc, char* argv[])
 {
@@ -267,7 +367,7 @@ int main(int argc, char* argv[])
             offset += val;
         }
 
-        MPI_Gatherv(row_reduced_data, number_of_my_rows * required_rank , MPI_DOUBLE, gathered_data, recv_counts.data(), displacement.data(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Gatherv(row_reduced_data, number_of_my_rows * required_rank , MPI_DOUBLE, gathered_data, recv_counts.data(), displacements.data(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
         //rearrange the combined data in row major order
         rearrange_data(gathered_data, number_of_my_rows, required_rank, nproc_row);
@@ -292,10 +392,10 @@ int main(int argc, char* argv[])
 
     //perform Q^T A
     int qta_lda = number_of_my_rows * nproc_row;
-    double *qta_local = multiplyPortionofATwithB(&qfactor[number_of_my_rows * rank_row], number_of_my_rows, required_rank, qta_lda, our_data, number_of_my_rows, number_of_my_cols); 
+    double *qta_local = multiplyPortionofATwithB(&qfactor[number_of_my_rows * rank_row], number_of_my_rows, required_rank, qta_lda, our_data, number_of_my_rows, number_of_my_columns); 
 
 
-    double qta_combined_on_root = reduceAlongColsAndGather(MPI_COMM_WORLD, nproc_row, nproc_col, qta_local, required_rank, number_of_my_cols);
+    double *qta_combined_on_root = reduceAlongColsAndGather(MPI_COMM_WORLD, nproc_row, nproc_col, qta_local, required_rank, number_of_my_columns);
 
 
 
@@ -305,7 +405,7 @@ int main(int argc, char* argv[])
         //svd of qta_combined_on_root
 
         int nrows = required_rank;
-        int ncols = nproc_col *number_of_my_cols;
+        int ncols = nproc_col *number_of_my_columns;
         double *U=nullptr;
         double *S=nullptr;
         double *VT=nullptr;
@@ -333,34 +433,33 @@ int main(int argc, char* argv[])
     //Multiply results with Q
 
 
-    //multily every block with a random matrix of size
+//    //multily every block with a random matrix of size
+//
+//    MPI_Comm row_comm;
+//    MPI_Comm_split(MPI_COMM_WORLD, rank_row, rank, &row_comm);
+//
+//    double *row_reduced_data = new double [4*4];
+//    MPI_Reduce(our_data, row_reduced_data, 16, MPI_DOUBLE, MPI_SUM, 0, row_comm);
+//
+//
+//    if(rank<4)
+//    {
+//        std::cout << "rank = " << rank << "\n";
+//        for(int irow=0; irow<4; irow++)
+//        {
+//            for(int icol=0; icol<4; icol++)
+//                //std::cout << our_data[icol*4 + irow] << " ";
+//                std::cout << row_reduced_data[icol*4 + irow] << " ";
+//
+//            std::cout << "\n";
+//        }
+//    }
+//    
+//    MPI_Barrier(row_comm);
+//    delete [] row_reduced_data;
+//
+//    MPI_Comm_free(&row_comm);
 
-    MPI_Comm row_comm;
-    MPI_Comm_split(MPI_COMM_WORLD, rank_row, rank, &row_comm);
-
-    double *row_reduced_data = new double [4*4];
-    MPI_Reduce(our_data, row_reduced_data, 16, MPI_DOUBLE, MPI_SUM, 0, row_comm);
-
-
-    if(rank<4)
-    {
-        std::cout << "rank = " << rank << "\n";
-        for(int irow=0; irow<4; irow++)
-        {
-            for(int icol=0; icol<4; icol++)
-                //std::cout << our_data[icol*4 + irow] << " ";
-                std::cout << row_reduced_data[icol*4 + irow] << " ";
-
-            std::cout << "\n";
-        }
-    }
-    
-    MPI_Barrier(row_comm);
-    delete [] row_reduced_data;
-
-    MPI_Comm_free(&row_comm);
-
-    delete [] our_data;
     
     MPI_Finalize(); 
     return 0;
