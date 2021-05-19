@@ -124,15 +124,15 @@ double* reduceAlongColsAndGather(MPI_Comm original_comm, int nproc_row, int npro
     double *output = nullptr;
     if(rank == 0)
     {
-        double *output = new double [nrows*ncols*nproc_col];
+        output = new double [nrows*ncols*nproc_col];
         std::vector<int> recv_counts;
         std::vector<int> displacements;
         //int recv_counts = new int [nprocess];
 
-        int val =0;
         int offset = 0;
         for(int iprocess =0; iprocess <nprocess; iprocess++)
         {
+            int val =0;
             if(iprocess % nproc_row == 0)
                 val = nrows*ncols;
             recv_counts.push_back(val);
@@ -171,6 +171,7 @@ void computesvd(double* &U, double* &S, double* &VT, double* input, int m, int n
     int info;
     vector<double> work(lwork);
 
+    assert(input != nullptr);
 
     dgesvd_(schar, schar, m, n, input, lda, S, U, ldu, VT, ldvt, work.data(), lwork, info);
 }
@@ -227,16 +228,27 @@ int main(int argc, char* argv[])
     int rank_row = rank % nproc_row;
     int rank_col = rank / nproc_row;
 
-    assert(nprocess == 16);
 
+    //assert(nprocess == 16);
+    assert(nproc_row == nproc_col);
 
-    double *our_data = new double [4*4];
+    int number_of_my_columns = 4;
+    int number_of_my_rows = 4;
+    int number_of_elements = number_of_my_rows * number_of_my_columns;
+
+    double *our_data = new double [number_of_elements];
+
     if(rank == 0)
     {
-        double input[16*16];
-        for(int i=0; i<16; i++)
-            for(int j=0; j<16; j++)
-                input[i*16 + j] = i*16 +j+1;
+
+        int global_nrow = nproc_row * number_of_my_rows;
+        int global_ncol = nproc_col *number_of_my_columns;
+
+        double input[global_nrow * global_ncol];
+
+        for(int i=0; i<global_ncol; i++)
+            for(int j=0; j<global_nrow; j++)
+                input[i*global_nrow + j] = i*global_nrow +j+1;
 
         for(int j=0; j<nproc_col; j++)
             for(int i=0; i<nproc_row; i++)
@@ -244,19 +256,22 @@ int main(int argc, char* argv[])
                 int recv_rank = j*nproc_row + i;
 
 
-                int start_row = i * 16/nproc_row;
-                int end_row = (i+1) * 16/nproc_row - 1;
+                int start_row = i * global_nrow/nproc_row;
+                int end_row = (i+1) * global_nrow/nproc_row - 1;
 
-                int start_col = j * 16/nproc_col;
-                int end_col = (j+1) * 16/nproc_col;
+                int start_col = j * global_ncol/nproc_col;
+                int end_col = (j+1) * global_ncol/nproc_col -1;
 
 
-                double temp[4*4];
+                double temp[number_of_elements];
 
-                    int nelements = 0;
-                    for(int it=start_col; it<=end_col; it++)
-                        for(int jt=start_row; jt<=end_row; jt++)
-                            temp[nelements++] = input[it*16+jt];
+                int nelements = 0;
+                for(int it=start_col; it<=end_col; it++)
+                    for(int jt=start_row; jt<=end_row; jt++)
+                        temp[nelements++] = input[it*global_nrow + jt];
+
+
+                assert(nelements == number_of_elements);
 
 //                    if(recv_rank ==2)
 //                    {
@@ -268,19 +283,19 @@ int main(int argc, char* argv[])
 
                 if(recv_rank == rank) 
                 {
-                    memcpy(our_data, temp, 4*4*sizeof(double));
+                    memcpy(our_data, temp, number_of_elements*sizeof(double));
                     continue;
                 }
                 
                 int tag = recv_rank;
-                MPI_Send(temp, 4*4, MPI_DOUBLE, recv_rank, tag, MPI_COMM_WORLD);
+                MPI_Send(temp, number_of_elements, MPI_DOUBLE, recv_rank, tag, MPI_COMM_WORLD);
             }
     }
     else
     {
         MPI_Status status;
         int tag = rank;
-        MPI_Recv(our_data, 4*4, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
+        MPI_Recv(our_data, number_of_elements, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
 
 //        if(rank ==2)
 //        {
@@ -296,9 +311,6 @@ int main(int argc, char* argv[])
 
     //end of data distribution
 
-    int number_of_my_columns = 4;
-    int number_of_my_rows = 4;
-    int number_of_elements = 4*4;
     int required_rank = 4;
     int number_of_elements_in_rmatrix = number_of_my_columns * required_rank;
 
@@ -356,10 +368,10 @@ int main(int argc, char* argv[])
         std::vector<int> displacements;
         //int recv_counts = new int [nprocess];
 
-        int val =0;
         int offset = 0;
         for(int iprocess =0; iprocess <nprocess; iprocess++)
         {
+            int val =0;
             if(iprocess / nproc_row == 0)
                 val =number_of_my_rows * required_rank;
             recv_counts.push_back(val);
@@ -384,6 +396,9 @@ int main(int argc, char* argv[])
     delete [] row_reduced_data;
     delete [] output_after_rand_matrix;
     delete [] rand_matrix;
+    //std::cout << "rank = " << rank << " (rank_row, rank_col) = (" << rank_row << ", " << rank_col << ")" << std::endl;
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     if(rank != 0)
         qfactor = new double [number_of_my_rows * required_rank * nproc_row];
@@ -396,7 +411,6 @@ int main(int argc, char* argv[])
 
 
     double *qta_combined_on_root = reduceAlongColsAndGather(MPI_COMM_WORLD, nproc_row, nproc_col, qta_local, required_rank, number_of_my_columns);
-
 
 
     if(rank == 0)
@@ -419,10 +433,18 @@ int main(int argc, char* argv[])
         U = combinedU;
 
         delete [] qta_combined_on_root;
+
+        std::cout << "Singular values are " << std::endl;
+        for(int i=0; i<required_rank; i++)
+            std::cout << S[i] << " ";
+        
+        std::cout << endl;
     }
     else
         assert(qta_combined_on_root == nullptr);
 
+    MPI_Barrier(MPI_COMM_WORLD);
+/*
 
     //delete qmatrix from all processors
     delete [] qfactor;
@@ -460,7 +482,7 @@ int main(int argc, char* argv[])
 //
 //    MPI_Comm_free(&row_comm);
 
-    
+  */  
     MPI_Finalize(); 
     return 0;
 }
