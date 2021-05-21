@@ -268,8 +268,8 @@ int main(int argc, char* argv[])
     //assert(nprocess == 16);
     assert(nproc_row == nproc_col);
 
-    int number_of_my_columns = 4;
-    int number_of_my_rows = 4;
+    int number_of_my_columns = 64;
+    int number_of_my_rows = 64;
     int number_of_elements = number_of_my_rows * number_of_my_columns;
 
     double *our_data = new double [number_of_elements];
@@ -280,7 +280,9 @@ int main(int argc, char* argv[])
         int global_nrow = nproc_row * number_of_my_rows;
         int global_ncol = nproc_col *number_of_my_columns;
 
-        double input[global_nrow * global_ncol];
+        //double *input = new double[global_nrow * global_ncol];
+        //delete [] input;
+        std::vector<double>input(global_nrow * global_ncol);
 
         for(int i=0; i<global_ncol; i++)
             for(int j=0; j<global_nrow; j++)
@@ -299,7 +301,8 @@ int main(int argc, char* argv[])
                 int end_col = (j+1) * global_ncol/nproc_col -1;
 
 
-                double temp[number_of_elements];
+                //double temp[number_of_elements];
+                std::vector<double>temp(number_of_elements);
 
                 int nelements = 0;
                 for(int it=start_col; it<=end_col; it++)
@@ -312,12 +315,12 @@ int main(int argc, char* argv[])
 
                 if(recv_rank == rank) 
                 {
-                    memcpy(our_data, temp, number_of_elements*sizeof(double));
+                    memcpy(our_data, temp.data(), number_of_elements*sizeof(double));
                     continue;
                 }
                 
                 int tag = recv_rank;
-                MPI_Send(temp, number_of_elements, MPI_DOUBLE, recv_rank, tag, MPI_COMM_WORLD);
+                MPI_Send(temp.data(), number_of_elements, MPI_DOUBLE, recv_rank, tag, MPI_COMM_WORLD);
             }
     }
     else
@@ -338,8 +341,6 @@ int main(int argc, char* argv[])
 
     double *rand_matrix = new double [number_of_elements_in_rmatrix];
     double *output_after_rand_matrix = new double [number_of_my_rows * required_rank];
-
-
 
 
     int seed = rank_col;
@@ -532,14 +533,14 @@ int main(int argc, char* argv[])
 
 
 
-        std::cout << "U matrix:" <<  std::endl;
+        //std::cout << "U matrix:" <<  std::endl;
 
-        for(int i=0; i<global_nrow; i++)
-        {
-            for(int j = 0; j<required_rank; j++)
-                std::cout << U[j*global_nrow+i] << " ";
-            std::cout << std::endl;
-        }
+        //for(int i=0; i<global_nrow; i++)
+        //{
+        //    for(int j = 0; j<required_rank; j++)
+        //        std::cout << U[j*global_nrow+i] << " ";
+        //    std::cout << std::endl;
+        //}
 
     }
     else
@@ -553,37 +554,6 @@ int main(int argc, char* argv[])
     //delete local data
     delete [] our_data;
 
-
-    //perform svd of Q^T A
-    //Multiply results with Q
-
-
-//    //multily every block with a random matrix of size
-//
-//    MPI_Comm row_comm;
-//    MPI_Comm_split(MPI_COMM_WORLD, rank_row, rank, &row_comm);
-//
-//    double *row_reduced_data = new double [4*4];
-//    MPI_Reduce(our_data, row_reduced_data, 16, MPI_DOUBLE, MPI_SUM, 0, row_comm);
-//
-//
-//    if(rank<4)
-//    {
-//        std::cout << "rank = " << rank << "\n";
-//        for(int irow=0; irow<4; irow++)
-//        {
-//            for(int icol=0; icol<4; icol++)
-//                //std::cout << our_data[icol*4 + irow] << " ";
-//                std::cout << row_reduced_data[icol*4 + irow] << " ";
-//
-//            std::cout << "\n";
-//        }
-//    }
-//    
-//    MPI_Barrier(row_comm);
-//    delete [] row_reduced_data;
-//
-//    MPI_Comm_free(&row_comm);
 
     MPI_Finalize(); 
     return 0;
