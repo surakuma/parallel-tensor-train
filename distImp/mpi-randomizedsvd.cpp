@@ -120,7 +120,8 @@ double* reduceAlongColsAndGather(MPI_Comm original_comm, int nproc_row, int npro
 
     MPI_Barrier(col_comm);
     MPI_Comm_free(&col_comm);
-    
+   
+
     double *output = nullptr;
     if(rank == 0)
     {
@@ -138,6 +139,7 @@ double* reduceAlongColsAndGather(MPI_Comm original_comm, int nproc_row, int npro
             recv_counts.push_back(val);
             displacements.push_back(offset);
             offset += val;
+
         }
 
         MPI_Gatherv(col_reduced_data, nrows*ncols, MPI_DOUBLE, output, recv_counts.data(), displacements.data(), MPI_DOUBLE, 0, original_comm);
@@ -145,7 +147,11 @@ double* reduceAlongColsAndGather(MPI_Comm original_comm, int nproc_row, int npro
     }
     else
     {
-        MPI_Gatherv(col_reduced_data, nrows*ncols, MPI_DOUBLE, nullptr, nullptr, nullptr, MPI_DOUBLE, 0, original_comm);
+        int val = 0;
+        if(rank % nproc_row == 0)
+            val = nrows*ncols;
+
+        MPI_Gatherv(col_reduced_data, val, MPI_DOUBLE, nullptr, nullptr, nullptr, MPI_DOUBLE, 0, original_comm);
     }
 
 
@@ -196,10 +202,22 @@ double* multiply(double* input1, const int &m1, const int&n1, double* input2, co
 }
 
 
-//inplace computation when m >= n
+//QR computation when m >= n
 double* computeQ(double *A, int m, int n)
 {
     double *copyA = new double [m*n];
+
+    memcpy(copyA, A, m*n*sizeof(double));
+
+    //std::cout << "Input data for QR:" <<  std::endl;
+
+    //for(int i=0; i<m; i++)
+    //{
+    //    for(int j = 0; j<n; j++)
+    //        std::cout << copyA[j*m+i] << " ";
+    //    std::cout << std::endl;
+    //}
+
     int lda = m;
     vector<double> tau(min(m,n));
     int lwork = n*n;
@@ -208,7 +226,25 @@ double* computeQ(double *A, int m, int n)
 
     dgeqrf_(m, n, copyA, m, tau.data(), work.data(), lwork, info);
     
+    //std::cout << "Output after dgeqrf:" <<  std::endl;
+
+    //for(int i=0; i<m; i++)
+    //{
+    //    for(int j = 0; j<n; j++)
+    //        std::cout << copyA[j*m+i] << " ";
+    //    std::cout << std::endl;
+    //}
+
     dorgqr_(m, n, n, copyA, m, tau.data(), work.data(), lwork, info);
+
+    //std::cout << "output after dorgqr:" <<  std::endl;
+
+    //for(int i=0; i<m; i++)
+    //{
+    //    for(int j = 0; j<n; j++)
+    //        std::cout << copyA[j*m+i] << " ";
+    //    std::cout << std::endl;
+    //}
 
     return copyA;
 }
@@ -273,13 +309,6 @@ int main(int argc, char* argv[])
 
                 assert(nelements == number_of_elements);
 
-//                    if(recv_rank ==2)
-//                    {
-//                        for(int ielement=0; ielement<nelements; ielement++)
-//                            std::cout << temp[ielement];
-//                    
-//                        std::cout << "\n";
-//                    }
 
                 if(recv_rank == rank) 
                 {
@@ -297,13 +326,6 @@ int main(int argc, char* argv[])
         int tag = rank;
         MPI_Recv(our_data, number_of_elements, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD, &status);
 
-//        if(rank ==2)
-//        {
-//            for(int ielement=0; ielement<nelements; ielement++)
-//                std::cout << temp[ielement];
-//
-//            std::cout << "\n";
-//        }
     }
 
 
@@ -333,8 +355,59 @@ int main(int argc, char* argv[])
     for(int i=0; i<number_of_elements_in_rmatrix; i++)
         rand_matrix[i] = dist(generator);
 
+//    if(rank_col == 0)
+//    {
+//        double temp [] =
+//        {
+//            1.432613,
+//            -0.466233,
+//            0.742636,
+//            -0.674397,
+//            -0.062557,
+//            1.356192,
+//            -0.347906,
+//            0.080427,
+//            -0.526175,
+//            -0.873231,
+//            -0.526907,
+//            0.381461,
+//            0.776267,
+//            2.618084,
+//            0.115061,
+//            -0.231823};
+//        assert(number_of_elements_in_rmatrix == 16);
+//        for(int i=0; i<16; i++)
+//            rand_matrix[i] = temp[i];
+//    }
+//    else if(rank_col == 1)
+//    {
+//
+//        double temp [] = {
+//            0.321452,
+//            -1.590274,
+//            0.152787,
+//            -0.108694,
+//            0.948357,
+//            -0.039121,
+//            0.390612,
+//            0.324967,
+//            0.949363,
+//            -0.138390,
+//            -2.409980,
+//            -0.605004,
+//            -0.625603,
+//            -0.645426,
+//            1.394459,
+//            -0.172012};
+//        assert(number_of_elements_in_rmatrix == 16);
+//        for(int i=0; i<16; i++)
+//            rand_matrix[i] = temp[i];
+//    }
+//    else
+//        assert(0);
+    
 
-    //calling GEMM kernel for each processor
+//calling GEMM kernel for each processor
 
     char trans = 'N';
     double alpha = 1.0;
@@ -390,7 +463,11 @@ int main(int argc, char* argv[])
     }
     else
     {
-        MPI_Gatherv(row_reduced_data, number_of_my_rows * required_rank , MPI_DOUBLE, nullptr, nullptr, nullptr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        int val = 0;
+            if(rank / nproc_row == 0)
+                val =number_of_my_rows * required_rank;
+
+        MPI_Gatherv(row_reduced_data, val, MPI_DOUBLE, nullptr, nullptr, nullptr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     }
 
     delete [] row_reduced_data;
@@ -398,7 +475,6 @@ int main(int argc, char* argv[])
     delete [] rand_matrix;
     //std::cout << "rank = " << rank << " (rank_row, rank_col) = (" << rank_row << ", " << rank_col << ")" << std::endl;
 
-    MPI_Barrier(MPI_COMM_WORLD);
 
     if(rank != 0)
         qfactor = new double [number_of_my_rows * required_rank * nproc_row];
@@ -413,8 +489,22 @@ int main(int argc, char* argv[])
     double *qta_combined_on_root = reduceAlongColsAndGather(MPI_COMM_WORLD, nproc_row, nproc_col, qta_local, required_rank, number_of_my_columns);
 
 
+
+
+    MPI_Barrier(MPI_COMM_WORLD);
     if(rank == 0)
     {
+
+        int global_nrow = nproc_row * number_of_my_rows;
+        int global_ncol = nproc_col *number_of_my_columns;
+        //std::cout << "qta_combined_on_root matrix:" <<  std::endl;
+
+        //for(int i=0; i<required_rank; i++)
+        //{
+        //    for(int j = 0; j<global_ncol; j++)
+        //        std::cout << qta_combined_on_root[j*required_rank+i] << " ";
+        //    std::cout << std::endl;
+        //}
         //process qfactor and qta_combined_on_root
         //svd of qta_combined_on_root
 
@@ -439,17 +529,30 @@ int main(int argc, char* argv[])
             std::cout << S[i] << " ";
         
         std::cout << endl;
+
+
+
+        std::cout << "U matrix:" <<  std::endl;
+
+        for(int i=0; i<global_nrow; i++)
+        {
+            for(int j = 0; j<required_rank; j++)
+                std::cout << U[j*global_nrow+i] << " ";
+            std::cout << std::endl;
+        }
+
     }
     else
         assert(qta_combined_on_root == nullptr);
 
     MPI_Barrier(MPI_COMM_WORLD);
-/*
 
     //delete qmatrix from all processors
     delete [] qfactor;
+
     //delete local data
     delete [] our_data;
+
 
     //perform svd of Q^T A
     //Multiply results with Q
@@ -482,7 +585,6 @@ int main(int argc, char* argv[])
 //
 //    MPI_Comm_free(&row_comm);
 
-  */  
     MPI_Finalize(); 
     return 0;
 }

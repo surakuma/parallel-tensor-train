@@ -29,15 +29,17 @@ extern "C" {
 //inplace computation when m >= n
 double* computeQ(double *A, int m, int n)
 {
+    double *copyA = new double [m*n];
+    memcpy(copyA, A, m*n*sizeof(double));
     int lda = m;
     vector<double> tau(min(m,n));
     int lwork = n*n;
     vector<double> work(lwork);
     int info;
 
-    dgeqrf_(m, n, A, m, tau.data(), work.data(), lwork, info);
+    dgeqrf_(m, n, copyA, m, tau.data(), work.data(), lwork, info);
     
-    dorgqr_(m, n, n, A, m, tau.data(), work.data(), lwork, info);
+    dorgqr_(m, n, n, copyA, m, tau.data(), work.data(), lwork, info);
 
-    return A;
+    return copyA;
 }
