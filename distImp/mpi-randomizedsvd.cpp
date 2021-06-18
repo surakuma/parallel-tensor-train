@@ -265,11 +265,13 @@ int main(int argc, char* argv[])
     int rank_col = rank / nproc_row;
 
 
+    //int matrix_size = 1024;
+    int matrix_size = 8;
     //assert(nprocess == 16);
     assert(nproc_row == nproc_col);
 
-    int number_of_my_columns = 64;
-    int number_of_my_rows = 64;
+    int number_of_my_columns = matrix_size / nproc_col;
+    int number_of_my_rows = matrix_size / nproc_row;
     int number_of_elements = number_of_my_rows * number_of_my_columns;
 
     double *our_data = new double [number_of_elements];
@@ -284,6 +286,7 @@ int main(int argc, char* argv[])
         //delete [] input;
         std::vector<double>input(global_nrow * global_ncol);
 
+        //srand(15);
         for(int i=0; i<global_ncol; i++)
             for(int j=0; j<global_nrow; j++)
                 input[i*global_nrow + j] = i*global_nrow +j+1;
