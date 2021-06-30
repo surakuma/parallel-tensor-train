@@ -8,7 +8,8 @@
 using namespace std;
 
 extern "C" {
-    /*
+
+    //declaration from http://www.netlib.org/scalapack/explore-html/d6/da2/pdgemm___8c_source.html
     void pdgemm_(
             char* TRANSA, // = 'N', A is used in the computation
             char* TRANSB, // = 'N', B is used in the computation
@@ -31,31 +32,43 @@ extern "C" {
             int* DESCC
             );
 
-    */
+    //declaration based on David's code
+    /*
     void pdgemm_(const char& transpose_a, const char& transpose_b, const int& ac_rows,
             const int& bc_columns, const int& ab_columns_rows, const double& alpha,
             const double* a_matrix, const int& ia, const int& ja, int* a_descriptor,
             const double * b_matrix, const int& ib, const int& jb, int* b_descriptor,
             const double& beta,
             double* c_matrix, const int& ic, const int& jc, int* c_descriptor);
+    */
+
+    //declaration from http://www.netlib.org/scalapack/explore-html/d9/dc9/blacs__get___8c_source.html
+    void blacs_get_(int *ctx, int *what, int *val);
 
 
+    /*
+     * http://www.netlib.org/scalapack/explore-html/de/dfb/blacs__map___8c_source.html
+     */
 
-    //void pdgemm_(char*, char*, int*, int*, int*, double*, double*, int*, int*, int*, double*, int*, int*, int*, double*, double*, int*, int*, int*);
-
-    void blacs_get_(int*, int*, int*);
     void blacs_gridmap_(int* ctx,
             int* usermap,
             int* ldumap,
             int* nprow,
             int* npcol);
-    //blacs_gridmap_(&ctx, usermap.data(), &nprow, &nprow, &npcol);
+
+
+    /*
+     * http://www.netlib.org/scalapack/explore-html/d9/de2/blacs__info___8c_source.html
+     */
     void blacs_gridinfo_(int* ctx,
             int* nprow,
             int* npcol,
             int* myrow,
             int* mycol);
 
+    /*
+     *
+     */
 
     int numroc_(int* nglobal,
             int* block_size,
@@ -73,32 +86,17 @@ extern "C" {
             int* ctx,
             int* lddA,
             int* info);
+    /*
+     * http://www.netlib.org/scalapack/explore-html/db/dcd/blacs__grid___8c_source.html
+     */
 
     void blacs_gridexit_(int* ctx);
-
     /*
-    void pdgemm_(const char* TRANSA, 
-            const char* TRANSB, 
-            const int* ncrows, 
-            const int* nccols,
-            const int* nacols,
-            const double* ALPHA, 
-            const double* A, 
-            const int* ia,
-            const int* ja,
-            int* descA,
-            const double* B, 
-            const int* ib,
-            const int* jb,
-            int* descB,
-            const double *BETA,
-            double* C, 
-            const int* ic,
-            const int* jc,
-            int* descC);
-    */
+     * http://www.netlib.org/scalapack/explore-html/d5/db4/blacs__init___8c_source.html
+     */
+    void blacs_gridinit_(int *Ctx, char* order, int *nprow, int *npcol);
+
 }
-extern "C" void blacs_gridinit_(int*, char*, int*, int*);
 int main(int argc, char **argv)
 {
     int myrank, nprocs;
@@ -203,10 +201,10 @@ int main(int argc, char **argv)
 
 
 
-    //pdgemm_(&notrans, &notrans, &n, &n, &n, &alpha, A, &one, &one, descA,
-    //        B, &one, &one, descB, &beta, C, &one, &one, descC);
+    pdgemm_(&notrans, &notrans, &n, &n, &n, &alpha, A, &one, &one, descA,
+            B, &one, &one, descB, &beta, C, &one, &one, descC);
 
-    pdgemm_('N', 'N', n, n, n, 1, A, 1, 1, descA, B, 1, 1, descB, 0, C, 1, 1, descC);
+    //pdgemm_('N', 'N', n, n, n, 1, A, 1, 1, descA, B, 1, 1, descB, 0, C, 1, 1, descC);
     printf("My rank = %d, output values = %lf, %lf, %lf, %lf\n", myrank, C[0], C[1], C[2], C[3]);
     
     delete [] A;
