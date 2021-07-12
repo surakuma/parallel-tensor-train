@@ -110,13 +110,13 @@ int main(int argc, char **argv)
 
     assert(nprow*npcol == nprocs);
 
-    int m = 4;
-    int k = 4;
-    int n = 4;
+    int m = 3;
+    int k = 5;
+    int n = 2;
 
     int mb = 2;
-    int kb = 2;
-    int nb = 2;
+    int kb = 3;
+    int nb = 1;
 
 
 
@@ -228,7 +228,11 @@ int main(int argc, char **argv)
             B, &one, &one, descB, &beta, C, &one, &one, descC);
 
     //pdgemm_('N', 'N', n, n, n, 1, A, 1, 1, descA, B, 1, 1, descB, 0, C, 1, 1, descC);
-    printf("My rank = %d, output values = %lf, %lf, %lf, %lf\n", myrank, C[0], C[1], C[2], C[3]);
+    //printf("My rank = %d, output values = %lf, %lf, %lf, %lf, %lf\n", myrank, C[0], C[1], C[2], C[3], C[4]);
+    for(size_t it=0; it < mlocalrow * nlocalcol; it++)
+    {
+        printf("My rank = %d, C[%d] = %lf\n", myrank, it, C[it]);
+    }
     
     delete [] A;
     delete [] B;
