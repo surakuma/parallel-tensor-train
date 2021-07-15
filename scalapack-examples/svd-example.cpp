@@ -238,14 +238,80 @@ int main(int argc, char **argv)
 
     std::cout << "My rank = " << myrank << " elements = " << A[0] << " " << A[1] <<  " " <<A[2] << " " << A[3] << endl;
 
+
+    int descA[9];
+    int info = 1;
+    int ldA = mlocalrow>1?mlocalrow:1;
+    descinit_(descA, &m, &n, &mb, &nb, &firstprocessrowcol, &firstprocessrowcol, &ctx, &ldA, &info);
+
+
+    //Not required: still checking for simplicty
+    assert(mb == mlocalrow)
+
+    char notrans='N';
+    int one = 1;
+    vector<double> singularValues(min(m, n));
+    double workOptimal;
+    int lwork = -1;
+
+   
+
+    pdgesvd_(&notrans, &notrans, &m, &n, A, &one, &one, descA, singularValues.data(), 
+            nullptr, &one, &one, nullptr,
+            nullptr, &one, &one, nullptr,
+            &workOptimal, &lwork, &info);
+
+    assert(info == 0);
+
+    lwork = (int)workOptimal;
+    vector<dobule> work(lwork);
+
+    pdgesvd_(&notrans, &notrans, &m, &n, A, &one, &one, descA, singularValues.data(), 
+            nullptr, &one, &one, nullptr,
+            nullptr, &one, &one, nullptr,
+            work.data(), &lwork, &info);
+
+    assert(info == 0);
+
     delete [] A;
     blacs_gridexit_(&ctx);
     MPI_Finalize();
  
+    int matrix_descriptor[9];
+    descinit_(matrix_descriptor, matrix_height, matrix_width, block_height, block_width,
+            0, 0, ctx, block_height, 0);
+
+    vector<double> singular_values(min(matrix_height, matrix_width));
+    double* u_matrix = nullptr;
+    double* vt_matrix = nullptr;
+
+    double work_optimal;
+    int info = 0;
+    assert(matrix_block.GetWritableValues().data() != nullptr);
+
+    pdgesvd_('N', 'N', matrix_height, matrix_width,
+            matrix_block.GetWritableValues().data(), 1, 1,
+            matrix_descriptor, singular_values.data(),
+            u_matrix, 1, 1, nullptr,
+            vt_matrix, 1, 1, nullptr,
+            &work_optimal, -1, info);
+
+    assert(info == 0);
+
+    int lwork = (int)work_optimal;
+    double work[lwork];
+
+    pdgesvd_('N', 'N', matrix_height, matrix_width,
+            matrix_block.GetWritableValues().data(), 1, 1,
+            matrix_descriptor, singular_values.data(),
+            u_matrix, 1, 1, nullptr,
+            vt_matrix, 1, 1, nullptr,
+            work, lwork, info);
+
+    assert(info == 0);
+
+    return singular_values;
+
     return 0;
 }
-
-
-
-
 
