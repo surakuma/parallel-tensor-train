@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cassert>
 #include <vector>
+#include <cstring>
 #include "mpi.h"
 
 
@@ -170,6 +171,13 @@ extern "C" {
 }
 
 
+double* makeLocalCopy(double* orig, unsigned int row, unsigned int col)
+{
+    double *copy = new double [row * col];
+    std::memcpy(copy, orig, row*col*sizeof(double));
+    return copy;
+}
+
 int main(int argc, char **argv)
 {
     int myrank, nprocs;
@@ -268,7 +276,6 @@ int main(int argc, char **argv)
 
     std::cout << "My rank = " << myrank << " elements = " << A[0] << " " << A[1] <<  " " <<A[2] << " " << A[3] << endl;
 
-
     double *copyA = makeLocalCopy(A, mlocalrow, nlocalcol);
 
     int descA[9];
@@ -278,7 +285,7 @@ int main(int argc, char **argv)
 
 
     //Not required: still checking for simplicty
-    assert(mb == mlocalrow)
+    assert(mb == mlocalrow);
 
     char notrans='N';
     int one = 1;
@@ -335,7 +342,8 @@ int main(int argc, char **argv)
     }
 
     MPI_Comm col_comm;
-    MPI_Comm_split(MPI_COMM_WORLD, mycol, rank, &col_comm);
+    MPI_Comm_split(MPI_COMM_WORLD, mycol, myrank, &col_comm);
+    //MPI_Comm_split(MPI_COMM_WORLD, mycol, rr, &col_comm);
 
     vector<double> globalR(mlocalrow * reqrank, 0);
 
@@ -343,6 +351,7 @@ int main(int argc, char **argv)
     MPI_Barrier(col_comm);
     MPI_Comm_free(&col_comm);
 
+    vector<double> globalU;
     //perform svd of this R matrix
     {
         //move global variables outside
@@ -394,6 +403,7 @@ int main(int argc, char **argv)
         //Broadcast U to all processors from the 0th processor (myrow == 0) && (mycol == 0)
         MPI_Bcast(U.data(), reqrank*reqrank, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Barrier(MPI_COMM_WORLD);
+        globalU = U;
     }
 
     //compute Q matrix
