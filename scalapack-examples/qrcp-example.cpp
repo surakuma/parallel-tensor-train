@@ -311,7 +311,7 @@ int main(int argc, char **argv)
 
 
     //Matrix A has been updated according to elementary reflectors
-    //Computations of inverse of ipiv
+    //Computations of inverse of the permutation vector ipiv
     
     vector <int> ipivinv(n);
 
@@ -320,6 +320,7 @@ int main(int argc, char **argv)
         ipivinv[ipiv[it]] = it;
 
     //required rank
+    //Assume that the required rank is not more than the length of local column
     int reqrank = 1;
     vector<double> localR(mlocalrow * reqrank, 0);
 
@@ -352,7 +353,9 @@ int main(int argc, char **argv)
     MPI_Comm_free(&col_comm);
 
     vector<double> globalU;
-    //perform svd of this R matrix
+    //TODO: Check how SVD is performed for global R
+    /*
+    //perform svd of the global R matrix
     {
         //move global variables outside
 
@@ -406,6 +409,8 @@ int main(int argc, char **argv)
         globalU = U;
     }
 
+    */
+
     //compute Q matrix
 
     lwork = -1;
@@ -420,6 +425,8 @@ int main(int argc, char **argv)
             workdorgqr.data(), &lwork, &info);
     assert(info == 0);
 
+    //TODO: verify this part
+    /*
     if(mycol == 0)
     {
         //store Q matrix in another variable
@@ -437,6 +444,8 @@ int main(int argc, char **argv)
                     updatedQ[jt*mlocalrow + it] += globalQ[kt*mlocalrow + it] * globalU[jt*reqrank +kt];
 
     }
+
+    */
 
     //Broadcast singular values (Assume each processor has all singular values)
 
